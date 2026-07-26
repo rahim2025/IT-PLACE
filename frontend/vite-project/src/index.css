@@ -19,6 +19,8 @@
   --color-destructive: #dc2626;
   --color-success: #16a34a;
   --color-ring: #0369a1;
+
+  --color-charcoal: #1c1c1e;
 }
 
 @layer base {

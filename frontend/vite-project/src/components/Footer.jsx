@@ -25,7 +25,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/10 bg-[#020617] text-slate-400">
+    <footer className="border-t border-white/10 bg-charcoal text-slate-400">
       <div className="container-app py-14">
         <div className="grid gap-12 md:grid-cols-4">
           <div>

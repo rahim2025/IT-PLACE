@@ -31,12 +31,18 @@ export const business = {
   whatsappLink: "https://wa.me/966554124031",
   stores: [
     {
+      shortName: "Computer Market",
       name: "Computer Market, Olaya St, Al Olaya, Riyadh",
       mapsUrl: "https://www.google.com/maps?q=24.683011121490818,46.69002265094237",
+      lat: 24.683011121490818,
+      lng: 46.69002265094237,
     },
     {
+      shortName: "Aseel Trading Est.",
       name: "Aseel Independent Trading Est., Olaya St, Al Olaya, Riyadh 12211",
       mapsUrl: "https://maps.app.goo.gl/z7tjBuRFFrJ4AsEz5",
+      lat: 24.6820209,
+      lng: 46.6906701,
     },
   ],
 };

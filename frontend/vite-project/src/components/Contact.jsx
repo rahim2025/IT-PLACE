@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, MapPin, MessageCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import SectionHeading from "./SectionHeading";
+import StoreMap from "./StoreMap";
 import { business } from "../data/content";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -57,7 +58,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="bg-primary py-16 md:py-24">
+    <section id="contact" className="bg-charcoal py-16 md:py-24">
       <div className="container-app">
         <SectionHeading
           eyebrow="Contact Us"
@@ -104,29 +105,17 @@ export default function Contact() {
               </span>
             </a>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-              <span className="flex items-start gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-sky-300">
-                  <MapPin size={22} aria-hidden="true" />
-                </span>
-                <span className="block text-sm text-slate-400">
-                  Store Locations, {business.location}
-                </span>
+            <div className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-sky-300">
+                <MapPin size={22} aria-hidden="true" />
               </span>
-              <ul className="mt-4 space-y-3 pl-1">
-                {business.stores.map((store) => (
-                  <li key={store.name}>
-                    <a
-                      href={store.mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-white underline decoration-white/30 underline-offset-4 hover:decoration-white cursor-pointer"
-                    >
-                      {store.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <span>
+                <span className="block text-sm text-slate-400">Store Locations</span>
+                <span className="block text-base font-semibold text-white">
+                  {business.stores.length} stores in {business.location}
+                </span>
+                <span className="mt-1 block text-sm text-slate-400">See the map below</span>
+              </span>
             </div>
           </motion.div>
 
@@ -250,6 +239,8 @@ export default function Contact() {
             )}
           </motion.form>
         </div>
+
+        <StoreMap stores={business.stores} />
       </div>
     </section>
   );

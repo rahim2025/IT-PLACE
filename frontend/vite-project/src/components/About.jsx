@@ -17,7 +17,7 @@ export default function About() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="mx-auto mt-10 max-w-3xl space-y-5 text-base leading-relaxed text-secondary text-balance"
+          className="mx-auto mt-10 max-w-3xl space-y-5 text-center text-base leading-relaxed text-secondary text-balance"
         >
           <p>
             From small businesses to large enterprises, we have successfully delivered networking

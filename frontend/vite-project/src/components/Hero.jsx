@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { business, stats } from "../data/content";
 
@@ -30,11 +30,47 @@ function VideoBackground() {
   );
 }
 
+function ScrollCue() {
+  const reduceMotion = useReducedMotion();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY < 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          type="button"
+          onClick={() => document.querySelector("#services")?.scrollIntoView({ behavior: "smooth" })}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          aria-label="Scroll down for more information"
+          className="fixed inset-x-0 top-[calc(62vh-46px)] z-30 mx-auto flex w-fit items-start justify-center rounded-full border-2 border-white/70 bg-black/20 p-1.5 text-white/80 shadow-lg backdrop-blur-sm transition-colors duration-200 hover:border-white hover:text-white cursor-pointer md:top-[calc(66vh-46px)]"
+          style={{ width: 22, height: 34 }}
+        >
+          <motion.span
+            className="block h-1.5 w-1.5 rounded-full bg-current"
+            animate={reduceMotion ? {} : { y: [0, 10, 0], opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-dvh items-center overflow-hidden bg-primary pt-24 pb-16 md:pt-28"
+      className="relative flex min-h-[62vh] items-center overflow-hidden bg-primary pt-20 pb-8 md:min-h-[66vh] md:pt-24"
     >
       <div className="absolute inset-0 z-0">
         <VideoBackground />
@@ -59,7 +95,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-6 text-4xl font-extrabold leading-tight text-white text-balance md:text-6xl"
+            className="mt-4 text-4xl font-extrabold leading-tight text-white text-balance md:text-5xl"
           >
             Network Infrastructure &amp; ICT Solutions Built for What&apos;s Next
           </motion.h1>
@@ -68,10 +104,10 @@ export default function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300 text-balance"
+            className="mt-4 max-w-xl text-lg leading-relaxed text-slate-300 text-balance"
           >
             ITPlace delivers enterprise networking, fiber infrastructure, cybersecurity, and
-            surveillance solutions across Riyadh — engineered for performance, security, and
+            surveillance solutions across Saudi Arabia — engineered for performance, security, and
             long-term reliability.
           </motion.p>
 
@@ -79,7 +115,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-9 flex flex-col gap-4 sm:flex-row"
+            className="mt-6 flex flex-col gap-4 sm:flex-row"
           >
             <a
               href="#services"
@@ -107,17 +143,19 @@ export default function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-14 grid grid-cols-2 gap-6 border-t border-white/10 pt-8 sm:grid-cols-4"
+            className="mt-6 grid grid-cols-2 gap-6 border-t border-white/10 pt-4 sm:grid-cols-4"
           >
             {stats.map((stat) => (
               <div key={stat.label}>
                 <dt className="text-sm text-slate-400">{stat.label}</dt>
-                <dd className="mt-1 text-2xl font-bold text-white md:text-3xl">{stat.value}</dd>
+                <dd className="mt-1 text-2xl font-bold text-white">{stat.value}</dd>
               </div>
             ))}
           </motion.dl>
         </div>
       </div>
+
+      <ScrollCue />
     </section>
   );
 }

@@ -7,7 +7,7 @@ const ICONS = [Award, ShieldCheck, Lightbulb, Users, HeartHandshake, Handshake];
 
 export default function Values() {
   return (
-    <section className="bg-primary py-16 md:py-24">
+    <section className="bg-charcoal py-16 md:py-24">
       <div className="container-app">
         <SectionHeading
           eyebrow="Core Values"

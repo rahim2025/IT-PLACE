@@ -1,8 +1,21 @@
 import { motion } from "framer-motion";
 
+const TONES = {
+  dark: {
+    eyebrow: "text-accent",
+    title: "text-primary",
+    description: "text-muted-foreground",
+  },
+  light: {
+    eyebrow: "text-sky-300",
+    title: "text-white",
+    description: "text-slate-300",
+  },
+};
+
 export default function SectionHeading({ eyebrow, title, description, align = "center", tone = "dark" }) {
   const isCenter = align === "center";
-  const isLight = tone === "light";
+  const palette = TONES[tone] ?? TONES.dark;
 
   return (
     <motion.div
@@ -13,27 +26,13 @@ export default function SectionHeading({ eyebrow, title, description, align = "c
       className={`max-w-2xl ${isCenter ? "mx-auto text-center" : "text-left"}`}
     >
       {eyebrow && (
-        <span
-          className={`inline-block text-sm font-semibold tracking-wide uppercase mb-3 ${
-            isLight ? "text-sky-300" : "text-accent"
-          }`}
-        >
+        <span className={`inline-block text-sm font-semibold tracking-wide uppercase mb-3 ${palette.eyebrow}`}>
           {eyebrow}
         </span>
       )}
-      <h2
-        className={`text-3xl md:text-4xl font-bold text-balance ${
-          isLight ? "text-white" : "text-primary"
-        }`}
-      >
-        {title}
-      </h2>
+      <h2 className={`text-3xl md:text-4xl font-bold text-balance ${palette.title}`}>{title}</h2>
       {description && (
-        <p
-          className={`mt-4 text-base md:text-lg leading-relaxed text-balance ${
-            isLight ? "text-slate-300" : "text-muted-foreground"
-          }`}
-        >
+        <p className={`mt-4 text-base md:text-lg leading-relaxed text-balance ${palette.description}`}>
           {description}
         </p>
       )}
