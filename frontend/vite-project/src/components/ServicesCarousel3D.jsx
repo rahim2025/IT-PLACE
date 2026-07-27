@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
 import { business } from "../data/content";
 
 function cardTransform(offset) {
@@ -84,16 +85,30 @@ function Card({ service, offset, onSelect, reduceMotion }) {
             {service.summary}
           </p>
           {isActive && (
-            <a
-              href={`${business.whatsappLink}?text=${quoteMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-light transition-colors duration-200 cursor-pointer"
-            >
-              <MessageCircle size={16} />
-              Request this service
-            </a>
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+              <a
+                href={`${business.whatsappLink}?text=${quoteMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-light transition-colors duration-200 cursor-pointer"
+              >
+                <MessageCircle size={16} />
+                Request this service
+              </a>
+              <Link
+                to={
+                  service.productCategoryId
+                    ? `/products?category=${service.productCategoryId}`
+                    : "/products"
+                }
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:text-primary transition-colors duration-200 cursor-pointer"
+              >
+                <ShoppingBag size={16} />
+                View Products
+              </Link>
+            </div>
           )}
         </div>
       </div>

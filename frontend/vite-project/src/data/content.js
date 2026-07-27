@@ -55,6 +55,7 @@ export const services = [
       "End-to-end networking solutions with scalable LAN, WAN, and wireless design, enterprise-grade deployment, and secure configuration.",
     image: "/services/01-network-design.png",
     icon: Network,
+    productCategoryId: "networking",
   },
   {
     id: 2,
@@ -63,6 +64,7 @@ export const services = [
       "Proactive monitoring, preventive maintenance, backup and disaster recovery, and rapid technical support to maximize uptime.",
     image: "/services/02-managed-network-ops.png",
     icon: Headset,
+    productCategoryId: "networking",
   },
   {
     id: 3,
@@ -71,6 +73,7 @@ export const services = [
       "Ultra-fast, high-capacity fiber optic networks with professional supply and installation of cables, ODFs, and patch panels.",
     image: "/services/03-fiber-connectivity.png",
     icon: Cable,
+    productCategoryId: "fiber",
   },
   {
     id: 4,
@@ -79,6 +82,7 @@ export const services = [
       "Precise fusion splicing, termination, emergency restoration, OTDR testing, and fault diagnosis for optimal fiber performance.",
     image: "/services/04-fiber-splicing.png",
     icon: Zap,
+    productCategoryId: "fiber",
   },
   {
     id: 5,
@@ -87,6 +91,7 @@ export const services = [
       "Reliable server room and data center infrastructure — rack deployment, structured cabling, cooling, and power distribution.",
     image: "/services/05-mission-critical-infra.png",
     icon: Server,
+    productCategoryId: "racks",
   },
   {
     id: 6,
@@ -95,6 +100,7 @@ export const services = [
       "Robust platforms for virtualization, backup, and centralized data management with reliable, scalable server and storage systems.",
     image: "/services/06-enterprise-computing-storage.png",
     icon: Database,
+    productCategoryId: "servers",
   },
   {
     id: 7,
@@ -103,6 +109,7 @@ export const services = [
       "Firewalls, VPNs, access control, network segmentation, and endpoint protection for a secure, resilient IT environment.",
     image: "/services/07-digital-security.png",
     icon: ShieldCheck,
+    productCategoryId: "networking",
   },
   {
     id: 8,
@@ -111,6 +118,7 @@ export const services = [
       "Enterprise wireless networks delivering seamless, secure, high-speed access across offices, hotels, and campuses.",
     image: "/services/08-wireless-connectivity.png",
     icon: Wifi,
+    productCategoryId: "wireless",
   },
   {
     id: 9,
@@ -119,6 +127,7 @@ export const services = [
       "Advanced IP cameras, video management systems, and intelligent monitoring to protect people, property, and assets.",
     image: "/services/09-security-surveillance.png",
     icon: Camera,
+    productCategoryId: "surveillance",
   },
   {
     id: 10,
@@ -127,6 +136,7 @@ export const services = [
       "Modern IP telephony, VoIP, unified communications, and video conferencing for organizations of all sizes.",
     image: "/services/10-business-communication.png",
     icon: Phone,
+    productCategoryId: "voip",
   },
   {
     id: 11,
@@ -135,6 +145,7 @@ export const services = [
       "Unified access control, attendance, automation, IoT, and environmental monitoring for smarter, more efficient buildings.",
     image: "/services/11-smart-technology.png",
     icon: Cpu,
+    productCategoryId: "wireless",
   },
   {
     id: 12,
@@ -143,6 +154,7 @@ export const services = [
       "Wall-mounted cabinets, floor-standing racks, outdoor enclosures, cooling accessories, and power distribution units.",
     image: "/services/12-enclosures-racks.png",
     icon: Boxes,
+    productCategoryId: "racks",
   },
   {
     id: 13,
@@ -151,6 +163,7 @@ export const services = [
       "Cable trays, trunking systems, ladder racks, and floor ducts for safe, organized, and maintainable cable installations.",
     image: "/services/13-cable-routing.png",
     icon: Route,
+    productCategoryId: "cabling",
   },
   {
     id: 14,
@@ -159,6 +172,7 @@ export const services = [
       "UPS systems, PDUs, surge protection, and battery backup solutions that safeguard critical IT and communication equipment.",
     image: "/services/14-power-backup.png",
     icon: BatteryCharging,
+    productCategoryId: "power",
   },
   {
     id: 15,
@@ -167,6 +181,7 @@ export const services = [
       "OSP fiber cables, splice closures, distribution cabinets, and duct systems built for challenging outdoor environments.",
     image: "/services/15-outdoor-network.png",
     icon: RadioTower,
+    productCategoryId: "fiber",
   },
   {
     id: 16,
@@ -175,6 +190,7 @@ export const services = [
       "Industry-standard fusion splicers, OTDRs, optical power meters, and certification testers for professional technicians.",
     image: "/services/16-network-testing-tools.png",
     icon: Gauge,
+    productCategoryId: "tools",
   },
   {
     id: 17,
@@ -183,6 +199,7 @@ export const services = [
       "Site assessments, network architecture design, Bills of Materials, and scalable recommendations tailored to your operations.",
     image: "/services/17-tech-consulting.png",
     icon: ClipboardList,
+    productCategoryId: null,
   },
   {
     id: 18,
@@ -191,6 +208,7 @@ export const services = [
       "Proactive maintenance, remote monitoring, troubleshooting, and Annual Maintenance Contracts for long-term reliability.",
     image: "/services/18-technical-support.png",
     icon: Wrench,
+    productCategoryId: null,
   },
   {
     id: 19,
@@ -199,6 +217,7 @@ export const services = [
       "Reliable, secure, high-performance connectivity — routers, switches, enterprise Wi-Fi, and appliances that scale with you.",
     image: "/services/19-enterprise-network-infra.png",
     icon: Building2,
+    productCategoryId: "networking",
   },
   {
     id: 20,
@@ -207,6 +226,7 @@ export const services = [
       "Complete structured cabling systems — copper cabling, patch panels, termination, testing, and certification.",
     image: "/services/20-structured-connectivity.png",
     icon: Layers,
+    productCategoryId: "cabling",
   },
 ];
 
