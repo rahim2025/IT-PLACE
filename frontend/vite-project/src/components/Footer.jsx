@@ -1,12 +1,14 @@
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, MessageCircle, MapPin, Store, ChevronRight } from "lucide-react";
 import { business } from "../data/content";
 
 const QUICK_LINKS = [
-  { label: "Home", href: "#top" },
-  { label: "Services", href: "#services" },
-  { label: "About Us", href: "#about" },
-  { label: "Why ITPlace", href: "#why-us" },
-  { label: "Our Clients", href: "#clients" },
+  { label: "Home", href: "#top", type: "anchor" },
+  { label: "Services", href: "#services", type: "anchor" },
+  { label: "Products", href: "/products", type: "route" },
+  { label: "About Us", href: "#about", type: "anchor" },
+  { label: "Why ITPlace", href: "#why-us", type: "anchor" },
+  { label: "Our Clients", href: "#clients", type: "anchor" },
 ];
 
 const SUPPORT_LINKS = [
@@ -19,8 +21,14 @@ const SUPPORT_LINKS = [
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const scrollTo = (href) => {
+    if (location.pathname !== "/") {
+      navigate(`/${href}`);
+      return;
+    }
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -60,17 +68,28 @@ export default function Footer() {
           <div>
             <h3 className="text-base font-bold text-white">Quick Links</h3>
             <ul className="mt-5 space-y-3 text-sm">
-              {QUICK_LINKS.map((link) => (
-                <li key={link.label}>
-                  <button
-                    type="button"
-                    onClick={() => scrollTo(link.href)}
-                    className="text-left transition-colors duration-200 hover:text-accent-light cursor-pointer"
-                  >
-                    {link.label}
-                  </button>
-                </li>
-              ))}
+              {QUICK_LINKS.map((link) =>
+                link.type === "route" ? (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="text-left transition-colors duration-200 hover:text-accent-light cursor-pointer"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ) : (
+                  <li key={link.label}>
+                    <button
+                      type="button"
+                      onClick={() => scrollTo(link.href)}
+                      className="text-left transition-colors duration-200 hover:text-accent-light cursor-pointer"
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                )
+              )}
             </ul>
           </div>
 

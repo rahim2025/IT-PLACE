@@ -1,14 +1,22 @@
+import { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import About from "./components/About";
-import Values from "./components/Values";
-import Services from "./components/Services";
-import WhyUs from "./components/WhyUs";
-import Clients from "./components/Clients";
-import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import BackToTopButton from "./components/BackToTopButton";
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+
+function ScrollToTopOnNavigate() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname, hash]);
+
+  return null;
+}
 
 function App() {
   return (
@@ -20,14 +28,12 @@ function App() {
         Skip to main content
       </a>
       <Navbar />
+      <ScrollToTopOnNavigate />
       <main id="main-content">
-        <Hero />
-        <Services />
-        <About />
-        <Values />
-        <WhyUs />
-        <Clients />
-        <Contact />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+        </Routes>
       </main>
       <Footer />
       <WhatsAppButton />

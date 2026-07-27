@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { business } from "../data/content";
 
 const NAV_LINKS = [
-  { label: "Home", href: "#top" },
-  { label: "Services", href: "#services" },
-  { label: "About", href: "#about" },
-  { label: "Why Us", href: "#why-us" },
-  { label: "Clients", href: "#clients" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "#top", type: "anchor" },
+  { label: "Services", href: "#services", type: "anchor" },
+  { label: "Products", href: "/products", type: "route" },
+  { label: "About", href: "#about", type: "anchor" },
+  { label: "Why Us", href: "#why-us", type: "anchor" },
+  { label: "Clients", href: "#clients", type: "anchor" },
+  { label: "Contact", href: "#contact", type: "anchor" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -29,10 +33,42 @@ export default function Navbar() {
     };
   }, [open]);
 
-  const handleNavClick = (href) => {
+  const handleAnchorClick = (href) => {
     setOpen(false);
+    if (location.pathname !== "/") {
+      navigate(`/${href}`);
+      return;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const renderLink = (link, className) => {
+    if (link.type === "route") {
+      const active = location.pathname === link.href;
+      return (
+        <Link
+          to={link.href}
+          onClick={() => setOpen(false)}
+          aria-current={active ? "page" : undefined}
+          className={`${className} ${active ? "text-accent" : ""} cursor-pointer`}
+        >
+          {link.label}
+        </Link>
+      );
+    }
+    return (
+      <a
+        href={link.href}
+        onClick={(e) => {
+          e.preventDefault();
+          handleAnchorClick(link.href);
+        }}
+        className={`${className} cursor-pointer`}
+      >
+        {link.label}
+      </a>
+    );
   };
 
   return (
@@ -46,7 +82,7 @@ export default function Navbar() {
           href="#top"
           onClick={(e) => {
             e.preventDefault();
-            handleNavClick("#top");
+            handleAnchorClick("#top");
           }}
           className="flex items-center gap-2 font-extrabold text-lg md:text-xl text-primary cursor-pointer"
         >
@@ -60,17 +96,11 @@ export default function Navbar() {
 
         <ul className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(link.href);
-                }}
-                className="text-sm font-medium text-secondary hover:text-accent transition-colors duration-200 cursor-pointer"
-              >
-                {link.label}
-              </a>
+            <li key={link.label}>
+              {renderLink(
+                link,
+                "text-sm font-medium text-secondary hover:text-accent transition-colors duration-200"
+              )}
             </li>
           ))}
         </ul>
@@ -99,17 +129,8 @@ export default function Navbar() {
         <div className="md:hidden bg-surface border-t border-border">
           <ul className="container-app flex flex-col gap-1 py-4">
             {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(link.href);
-                  }}
-                  className="block py-3 text-base font-medium text-secondary hover:text-accent cursor-pointer"
-                >
-                  {link.label}
-                </a>
+              <li key={link.label}>
+                {renderLink(link, "block py-3 text-base font-medium text-secondary hover:text-accent")}
               </li>
             ))}
             <li className="pt-2">
