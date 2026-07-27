@@ -24,7 +24,7 @@ function cardTransform(offset) {
     opacity: abs === 0 ? 1 : abs === 1 ? 0.55 : 0.24,
     rotateY: abs === 0 ? 0 : dir * -30,
     zIndex: 20 - abs,
-    pointerEvents: abs === 0 ? "none" : "auto",
+    pointerEvents: "auto",
   };
 }
 
@@ -176,18 +176,6 @@ export default function ServicesCarousel3D({ services }) {
         >
           <ChevronRight size={22} />
         </button>
-      </div>
-
-      <div className="mx-auto mt-8 flex max-w-xs items-center gap-4">
-        <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-border">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-300 ease-out"
-            style={{ width: `${((activeIndex + 1) / total) * 100}%` }}
-          />
-        </div>
-        <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
-          {activeIndex + 1} / {total}
-        </span>
       </div>
     </div>
   );
