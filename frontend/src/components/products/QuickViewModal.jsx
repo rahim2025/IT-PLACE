@@ -1,24 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Heart, MessageCircle } from "lucide-react";
+import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import StarRating from "./StarRating";
 import ProductBadge from "./ProductBadge";
+import WhatsAppIcon from "../WhatsAppIcon";
 import { formatPrice } from "../../utils/format";
 import { business } from "../../data/content";
 
 export default function QuickViewModal({ product, onClose, isWishlisted, onToggleWishlist }) {
+  const [activeImage, setActiveImage] = useState(0);
+  const images = product?.images?.length ? product.images : product ? [product.image] : [];
+
+  useEffect(() => {
+    setActiveImage(0);
+  }, [product?.id]);
+
+  const showPrev = () => setActiveImage((i) => (i === 0 ? images.length - 1 : i - 1));
+  const showNext = () => setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1));
+
   useEffect(() => {
     if (!product) return undefined;
     document.body.style.overflow = "hidden";
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && images.length > 1) showPrev();
+      if (e.key === "ArrowRight" && images.length > 1) showNext();
     };
     window.addEventListener("keydown", handleKey);
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKey);
     };
-  }, [product, onClose]);
+  }, [product, onClose, images.length]);
 
   if (!product) return null;
 
@@ -57,8 +70,80 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
               <X size={18} />
             </button>
 
-            <div className="aspect-square w-full bg-muted md:aspect-auto">
-              <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+            <div className="flex flex-col bg-muted">
+              <div className="relative aspect-square w-full overflow-hidden md:aspect-auto md:flex-1">
+                <motion.img
+                  key={activeImage}
+                  src={images[activeImage]}
+                  alt={`${product.name} — image ${activeImage + 1} of ${images.length}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  drag={images.length > 1 ? "x" : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.15}
+                  onDragEnd={(_e, info) => {
+                    if (info.offset.x < -60) showNext();
+                    else if (info.offset.x > 60) showPrev();
+                  }}
+                  className={`h-full w-full object-cover ${images.length > 1 ? "cursor-grab active:cursor-grabbing" : ""}`}
+                  draggable={false}
+                />
+
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={showPrev}
+                      aria-label="Previous image"
+                      className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors duration-200 hover:bg-black/70 cursor-pointer"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={showNext}
+                      aria-label="Next image"
+                      className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors duration-200 hover:bg-black/70 cursor-pointer"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                    <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                      {images.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setActiveImage(i)}
+                          aria-label={`Show image ${i + 1}`}
+                          aria-current={i === activeImage}
+                          className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
+                            i === activeImage ? "w-5 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto p-3">
+                  {images.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setActiveImage(i)}
+                      aria-label={`Show image ${i + 1}`}
+                      aria-current={i === activeImage}
+                      className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors duration-200 cursor-pointer ${
+                        i === activeImage ? "border-accent" : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex max-h-[80vh] flex-col overflow-y-auto p-6 md:p-8">
@@ -123,9 +208,9 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
                   href={`${business.whatsappLink}?text=${quoteMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-light cursor-pointer"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#20bd5a] cursor-pointer"
                 >
-                  <MessageCircle size={16} />
+                  <WhatsAppIcon className="h-4 w-4" />
                   Enquire on WhatsApp
                 </a>
                 <button

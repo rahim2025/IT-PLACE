@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
 import { business } from "../data/content";
+import { getServiceIcon } from "../data/serviceIcons";
 
 function cardTransform(offset) {
   const abs = Math.abs(offset);
@@ -30,7 +31,7 @@ function cardTransform(offset) {
 }
 
 function Card({ service, offset, onSelect, reduceMotion }) {
-  const Icon = service.icon;
+  const Icon = getServiceIcon(service.icon);
   const isActive = offset === 0;
   const transform = cardTransform(offset);
   const quoteMessage = encodeURIComponent(

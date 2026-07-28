@@ -1,5 +1,5 @@
 // One-time/idempotent seed: mirrors the mock catalog that used to live in
-// frontend/vite-project/src/data/products.js so the storefront looks
+// frontend/src/data/products.js so the storefront looks
 // identical once it switches from the static import to a real API call.
 require("dotenv").config();
 const mongoose = require("mongoose");

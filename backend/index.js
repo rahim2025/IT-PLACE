@@ -10,6 +10,8 @@ const productsRouter = require("./routes/products");
 const usersRouter = require("./routes/users");
 const categoriesRouter = require("./routes/categories");
 const brandsRouter = require("./routes/brands");
+const servicesRouter = require("./routes/services");
+const clientsRouter = require("./routes/clients");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +33,8 @@ app.use("/api/products", productsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/brands", brandsRouter);
+app.use("/api/services", servicesRouter);
+app.use("/api/clients", clientsRouter);
 
 mongoose
   .connect(MONGO_URI)

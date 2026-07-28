@@ -26,6 +26,10 @@ const AdminProductFormPage = lazy(() => import("./pages/admin/AdminProductFormPa
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminCategoriesPage = lazy(() => import("./pages/admin/AdminCategoriesPage"));
 const AdminBrandsPage = lazy(() => import("./pages/admin/AdminBrandsPage"));
+const AdminServicesPage = lazy(() => import("./pages/admin/AdminServicesPage"));
+const AdminServiceFormPage = lazy(() => import("./pages/admin/AdminServiceFormPage"));
+const AdminClientsPage = lazy(() => import("./pages/admin/AdminClientsPage"));
+const AdminClientFormPage = lazy(() => import("./pages/admin/AdminClientFormPage"));
 const AdminPlaceholderPage = lazy(() => import("./pages/admin/AdminPlaceholderPage"));
 
 function ScrollToTopOnNavigate() {
@@ -100,6 +104,12 @@ function App() {
               <Route path="products/:id/edit" element={<AdminProductFormPage />} />
               <Route path="categories" element={<AdminCategoriesPage />} />
               <Route path="brands" element={<AdminBrandsPage />} />
+              <Route path="services" element={<AdminServicesPage />} />
+              <Route path="services/new" element={<AdminServiceFormPage />} />
+              <Route path="services/:id/edit" element={<AdminServiceFormPage />} />
+              <Route path="clients" element={<AdminClientsPage />} />
+              <Route path="clients/new" element={<AdminClientFormPage />} />
+              <Route path="clients/:id/edit" element={<AdminClientFormPage />} />
               <Route path="orders" element={<AdminPlaceholderPage title="Orders" />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="settings" element={<AdminPlaceholderPage title="Settings" />} />
