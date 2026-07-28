@@ -1,11 +1,32 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import WhatsAppButton from "./components/WhatsAppButton";
 import BackToTopButton from "./components/BackToTopButton";
+import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
+import ProfilePage from "./pages/ProfilePage";
+import WishlistPage from "./pages/WishlistPage";
+import OrdersPage from "./pages/OrdersPage";
+import CheckoutPage from "./pages/CheckoutPage";
+
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminProductsPage = lazy(() => import("./pages/admin/AdminProductsPage"));
+const AdminProductFormPage = lazy(() => import("./pages/admin/AdminProductFormPage"));
+const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
+const AdminCategoriesPage = lazy(() => import("./pages/admin/AdminCategoriesPage"));
+const AdminBrandsPage = lazy(() => import("./pages/admin/AdminBrandsPage"));
+const AdminPlaceholderPage = lazy(() => import("./pages/admin/AdminPlaceholderPage"));
 
 function ScrollToTopOnNavigate() {
   const { pathname, hash } = useLocation();
@@ -18,7 +39,18 @@ function ScrollToTopOnNavigate() {
   return null;
 }
 
+function AdminFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-primary text-white">
+      <Loader2 size={28} className="animate-spin" />
+    </div>
+  );
+}
+
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   return (
     <>
       <a
@@ -27,17 +59,57 @@ function App() {
       >
         Skip to main content
       </a>
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
       <ScrollToTopOnNavigate />
       <main id="main-content">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+          </Route>
+
+          <Route
+            element={
+              <Suspense fallback={<AdminFallback />}>
+                <AdminRoute />
+              </Suspense>
+            }
+          >
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminLayout />
+                </Suspense>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProductsPage />} />
+              <Route path="products/new" element={<AdminProductFormPage />} />
+              <Route path="products/:id/edit" element={<AdminProductFormPage />} />
+              <Route path="categories" element={<AdminCategoriesPage />} />
+              <Route path="brands" element={<AdminBrandsPage />} />
+              <Route path="orders" element={<AdminPlaceholderPage title="Orders" />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="settings" element={<AdminPlaceholderPage title="Settings" />} />
+            </Route>
+          </Route>
         </Routes>
       </main>
-      <Footer />
-      <WhatsAppButton />
-      <BackToTopButton />
+      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <WhatsAppButton />}
+      {!isAdminRoute && <BackToTopButton />}
     </>
   );
 }

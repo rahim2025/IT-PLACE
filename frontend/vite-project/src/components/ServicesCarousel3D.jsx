@@ -80,8 +80,10 @@ function Card({ service, offset, onSelect, reduceMotion }) {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
             <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
           </span>
-          <h3 className="mt-4 text-base font-bold text-primary md:text-lg">{service.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <h3 className="mt-4 line-clamp-2 text-base font-bold text-primary md:text-lg">
+            {service.title}
+          </h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {service.summary}
           </p>
           {isActive && (
@@ -146,13 +148,13 @@ export default function ServicesCarousel3D({ services }) {
   };
 
   return (
-    <div className="container-app">
+    <div className="container-app overflow-hidden">
       <div
         ref={stageRef}
         tabIndex={0}
         onKeyDown={handleKeyDown}
         aria-label="Services carousel — use arrow keys, drag, or the buttons to browse"
-        className="relative mx-auto h-[420px] max-w-4xl outline-none sm:h-[460px] md:h-[500px]"
+        className="relative mx-auto h-[500px] max-w-4xl outline-none sm:h-[540px] md:h-[580px]"
         style={{ perspective: 1600 }}
       >
         <motion.div

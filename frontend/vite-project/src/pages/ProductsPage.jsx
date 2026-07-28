@@ -13,11 +13,12 @@ import Pagination from "../components/products/Pagination";
 import QuickViewModal from "../components/products/QuickViewModal";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useWishlist } from "../hooks/useWishlist";
-import { PRODUCTS, PRICE_BOUNDS, CATEGORIES } from "../data/products";
+import { CATEGORIES } from "../data/products";
+import { api } from "../utils/api";
 
 const SKELETON_COUNT = 8;
 
-function ActiveFilterChips({ filters, toggleArrayFilter, setRating, setPriceRange, setSearch }) {
+function ActiveFilterChips({ filters, toggleArrayFilter, setRating, setPriceRange, setSearch, priceBounds }) {
   const chips = [];
 
   filters.categories.forEach((id) => {
@@ -42,11 +43,11 @@ function ActiveFilterChips({ filters, toggleArrayFilter, setRating, setPriceRang
   if (filters.rating > 0) {
     chips.push({ key: "rating", label: `${filters.rating}+ Stars`, onRemove: () => setRating(0) });
   }
-  if (filters.minPrice > PRICE_BOUNDS.min || filters.maxPrice < PRICE_BOUNDS.max) {
+  if (filters.minPrice > priceBounds.min || filters.maxPrice < priceBounds.max) {
     chips.push({
       key: "price",
       label: `SAR ${filters.minPrice}–${filters.maxPrice}`,
-      onRemove: () => setPriceRange(PRICE_BOUNDS.min, PRICE_BOUNDS.max),
+      onRemove: () => setPriceRange(priceBounds.min, priceBounds.max),
     });
   }
   if (filters.search) {
@@ -77,22 +78,34 @@ export default function ProductsPage() {
   const [retryToken, setRetryToken] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [products, setProducts] = useState([]);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
-  // Simulated async catalog load so the loading-skeleton / error-state code
-  // paths are real and exercised, even though the data here is local. Swap
-  // this effect for a real fetch() once a products API/endpoint exists.
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
-    const timer = setTimeout(() => {
-      if (!cancelled) setStatus("success");
-    }, 450);
+    api
+      .get("/products")
+      .then((data) => {
+        if (cancelled) return;
+        setProducts(data.products.filter((p) => p.status === "active"));
+        setStatus("success");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error");
+      });
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     };
   }, [retryToken]);
+
+  const priceBounds = useMemo(() => {
+    if (products.length === 0) return { min: 0, max: 0 };
+    return products.reduce(
+      (acc, p) => ({ min: Math.min(acc.min, p.price), max: Math.max(acc.max, p.price) }),
+      { min: Infinity, max: 0 }
+    );
+  }, [products]);
 
   const {
     filters,
@@ -105,11 +118,11 @@ export default function ProductsPage() {
     clearAll,
     isFiltersActive,
     results,
-  } = useProductFilters(PRODUCTS, PRICE_BOUNDS);
+  } = useProductFilters(products, priceBounds);
 
   const hookProps = useMemo(
-    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds: PRICE_BOUNDS }),
-    [filters, toggleArrayFilter, setPriceRange, setRating]
+    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds }),
+    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds]
   );
 
   return (
@@ -151,6 +164,7 @@ export default function ProductsPage() {
             setRating={setRating}
             setPriceRange={setPriceRange}
             setSearch={setSearch}
+            priceBounds={priceBounds}
           />
         </div>
 

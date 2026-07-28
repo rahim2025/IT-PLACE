@@ -1,0 +1,37 @@
+const mongoose = require("mongoose");
+
+const productSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 200 },
+    categoryId: { type: String, required: true, trim: true },
+    category: { type: String, required: true, trim: true },
+    brand: { type: String, required: true, trim: true },
+    price: { type: Number, required: true, min: 0 },
+    discountPrice: { type: Number, min: 0, default: null },
+    sku: { type: String, required: true, trim: true, unique: true },
+    stock: { type: Number, required: true, min: 0, default: 0 },
+    images: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: (arr) => arr.length <= 8,
+        message: "A product can have at most 8 images.",
+      },
+    },
+    description: { type: String, default: "", maxlength: 4000 },
+    tags: { type: [String], default: [] },
+    colors: { type: [String], default: [] },
+    sizes: { type: [String], default: [] },
+    featured: { type: Boolean, default: false },
+    bestSeller: { type: Boolean, default: false },
+    newArrival: { type: Boolean, default: false },
+    status: { type: String, enum: ["active", "draft"], default: "active" },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0, min: 0 },
+  },
+  { timestamps: true }
+);
+
+productSchema.index({ name: "text", brand: "text", category: "text", tags: "text" });
+
+module.exports = mongoose.model("Product", productSchema);
