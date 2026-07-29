@@ -1,0 +1,12 @@
+# Single-page app fallback: any request that isn't a real file or
+# directory gets served index.html instead, so client-side routes
+# (React Router) work on direct links / page refreshes — e.g. an emailed
+# password-reset link landing straight on /reset-password/:token.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
