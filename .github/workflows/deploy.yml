@@ -34,7 +34,31 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          if [ ! -s ~/.ssh/deploy_key ]; then
+            echo "::error::deploy_key is empty — HOSTINGER_SSH_KEY secret is missing or blank."
+            exit 1
+          fi
+          if ! head -1 ~/.ssh/deploy_key | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            echo "::error::deploy_key doesn't look like a private key — check the HOSTINGER_SSH_KEY secret was pasted in full."
+            exit 1
+          fi
+
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -p "$SSH_PORT" -T 15 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
+              if [ -s ~/.ssh/known_hosts ]; then
+                echo "ssh-keyscan succeeded on attempt $attempt"
+                break
+              fi
+            fi
+            echo "ssh-keyscan attempt $attempt failed:"
+            cat keyscan_err.log || true
+            if [ "$attempt" = "5" ]; then
+              echo "::error::ssh-keyscan failed after 5 attempts against $SSH_HOST:$SSH_PORT"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
 
       - name: Deploy dist/ via rsync
         run: |
@@ -52,7 +76,31 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          if [ ! -s ~/.ssh/deploy_key ]; then
+            echo "::error::deploy_key is empty — HOSTINGER_SSH_KEY secret is missing or blank."
+            exit 1
+          fi
+          if ! head -1 ~/.ssh/deploy_key | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            echo "::error::deploy_key doesn't look like a private key — check the HOSTINGER_SSH_KEY secret was pasted in full."
+            exit 1
+          fi
+
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -p "$SSH_PORT" -T 15 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
+              if [ -s ~/.ssh/known_hosts ]; then
+                echo "ssh-keyscan succeeded on attempt $attempt"
+                break
+              fi
+            fi
+            echo "ssh-keyscan attempt $attempt failed:"
+            cat keyscan_err.log || true
+            if [ "$attempt" = "5" ]; then
+              echo "::error::ssh-keyscan failed after 5 attempts against $SSH_HOST:$SSH_PORT"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
 
       - name: Sync source via rsync
         # Never deletes on the server, and explicitly skips runtime-only
