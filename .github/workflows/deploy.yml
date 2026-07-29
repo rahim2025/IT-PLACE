@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  SSH_HOST: 82.25.125.75
+  SSH_HOST: 92.112.189.129
   SSH_PORT: 65002
   SSH_USER: u983303466
   REMOTE_FRONTEND_DIR: /home/u983303466/domains/itplace.shop/public_html/
