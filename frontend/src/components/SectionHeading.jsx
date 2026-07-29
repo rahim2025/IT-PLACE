@@ -13,7 +13,7 @@ const TONES = {
   },
 };
 
-export default function SectionHeading({ eyebrow, title, description, align = "center", tone = "dark" }) {
+export default function SectionHeading({ eyebrow, title, description, align = "center", tone = "dark", as: Heading = "h2" }) {
   const isCenter = align === "center";
   const palette = TONES[tone] ?? TONES.dark;
 
@@ -30,7 +30,7 @@ export default function SectionHeading({ eyebrow, title, description, align = "c
           {eyebrow}
         </span>
       )}
-      <h2 className={`text-3xl md:text-4xl font-bold text-balance ${palette.title}`}>{title}</h2>
+      <Heading className={`text-3xl md:text-4xl font-bold text-balance ${palette.title}`}>{title}</Heading>
       {description && (
         <p className={`mt-4 text-base md:text-lg leading-relaxed text-balance ${palette.description}`}>
           {description}

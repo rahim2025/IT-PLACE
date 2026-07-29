@@ -1,30 +1,13 @@
 const express = require("express");
 const Product = require("../models/Product");
-const User = require("../models/User");
 const { protect, restrictTo } = require("../middleware/auth");
-const { upload } = require("../middleware/upload");
+const { upload, convertToWebp } = require("../middleware/upload");
 const { serializeProduct } = require("../utils/serializeProduct");
+const { parseListField, parseBool } = require("../utils/requestFields");
+const { parseSeoFields } = require("../utils/seoFields");
+const { generateUniqueSlug } = require("../utils/slugify");
 
 const router = express.Router();
-
-function parseListField(value) {
-  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
-  if (typeof value !== "string" || !value.trim()) return [];
-  try {
-    const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean);
-  } catch {
-    // not JSON — fall back to comma-separated
-  }
-  return value
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
-
-function parseBool(value) {
-  return value === true || value === "true" || value === "on" || value === "1";
-}
 
 function buildProductPayload(body, uploadedImageUrls) {
   const existingImages = parseListField(body.existingImages);
@@ -69,6 +52,7 @@ function buildProductPayload(body, uploadedImageUrls) {
       bestSeller: parseBool(body.bestSeller),
       newArrival: parseBool(body.newArrival),
       status: body.status === "draft" ? "draft" : "active",
+      ...parseSeoFields(body),
     },
   };
 }
@@ -84,6 +68,27 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/products/slug/:slug — public, includes related products for
+// detail-page internal linking (same category, excluding itself)
+router.get("/slug/:slug", async (req, res) => {
+  try {
+    const product = await Product.findOne({ slug: req.params.slug, status: "active" });
+    if (!product) return res.status(404).json({ error: "Product not found." });
+
+    const related = await Product.find({
+      categoryId: product.categoryId,
+      status: "active",
+      _id: { $ne: product._id },
+    })
+      .limit(4)
+      .sort({ createdAt: -1 });
+
+    res.json({ product: serializeProduct(product), related: related.map(serializeProduct) });
+  } catch {
+    res.status(404).json({ error: "Product not found." });
+  }
+});
+
 // GET /api/products/:id — public
 router.get("/:id", async (req, res) => {
   try {
@@ -96,7 +101,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/products — admin only
-router.post("/", protect, restrictTo("admin"), upload.array("images", 8), async (req, res) => {
+router.post("/", protect, restrictTo("admin"), upload.array("images", 8), convertToWebp, async (req, res) => {
   const uploadedUrls = (req.files || []).map((f) => `/uploads/products/${f.filename}`);
   const { errors, payload } = buildProductPayload(req.body, uploadedUrls);
 
@@ -109,6 +114,7 @@ router.post("/", protect, restrictTo("admin"), upload.array("images", 8), async 
     if (existingSku) {
       return res.status(409).json({ error: "A product with this SKU already exists.", fieldErrors: { sku: "SKU already in use." } });
     }
+    payload.slug = await generateUniqueSlug(Product, payload.name);
     const product = await Product.create(payload);
     res.status(201).json({ product: serializeProduct(product) });
   } catch (err) {
@@ -118,7 +124,7 @@ router.post("/", protect, restrictTo("admin"), upload.array("images", 8), async 
 });
 
 // PUT /api/products/:id — admin only
-router.put("/:id", protect, restrictTo("admin"), upload.array("images", 8), async (req, res) => {
+router.put("/:id", protect, restrictTo("admin"), upload.array("images", 8), convertToWebp, async (req, res) => {
   const uploadedUrls = (req.files || []).map((f) => `/uploads/products/${f.filename}`);
   const { errors, payload } = buildProductPayload(req.body, uploadedUrls);
 
@@ -131,11 +137,15 @@ router.put("/:id", protect, restrictTo("admin"), upload.array("images", 8), asyn
     if (duplicateSku) {
       return res.status(409).json({ error: "A product with this SKU already exists.", fieldErrors: { sku: "SKU already in use." } });
     }
+    const existing = await Product.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: "Product not found." });
+    if (!existing.slug || payload.name !== existing.name) {
+      payload.slug = await generateUniqueSlug(Product, payload.name, existing._id);
+    }
     const product = await Product.findByIdAndUpdate(req.params.id, payload, {
       new: true,
       runValidators: true,
     });
-    if (!product) return res.status(404).json({ error: "Product not found." });
     res.json({ product: serializeProduct(product) });
   } catch (err) {
     console.error("Failed to update product:", err.message);

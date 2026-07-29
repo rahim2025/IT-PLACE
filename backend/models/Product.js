@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 200 },
+    slug: { type: String, required: true, trim: true, unique: true, lowercase: true, maxlength: 220 },
     categoryId: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
     brand: { type: String, required: true, trim: true },
@@ -28,6 +29,15 @@ const productSchema = new mongoose.Schema(
     status: { type: String, enum: ["active", "draft"], default: "active" },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0, min: 0 },
+    // Optional SEO overrides — the frontend generates sensible defaults
+    // from the fields above whenever these are left blank.
+    seoTitle: { type: String, default: "", trim: true, maxlength: 70 },
+    seoDescription: { type: String, default: "", trim: true, maxlength: 320 },
+    seoKeywords: { type: [String], default: [] },
+    canonicalUrl: { type: String, default: "", trim: true },
+    ogImage: { type: String, default: "", trim: true },
+    socialTitle: { type: String, default: "", trim: true, maxlength: 70 },
+    socialDescription: { type: String, default: "", trim: true, maxlength: 320 },
   },
   { timestamps: true }
 );

@@ -15,6 +15,8 @@ import { useProductFilters } from "../hooks/useProductFilters";
 import { useWishlist } from "../hooks/useWishlist";
 import { CATEGORIES } from "../data/products";
 import { api } from "../utils/api";
+import SeoHead from "../seo/SeoHead";
+import { absoluteUrl } from "../seo/config";
 
 const SKELETON_COUNT = 8;
 
@@ -127,8 +129,14 @@ export default function ProductsPage() {
 
   return (
     <section className="bg-background py-16 md:py-24">
+      <SeoHead
+        title="Product Catalog | ITPlace"
+        description="Browse enterprise networking gear, servers, surveillance, cabling, and more — sourced and supported by ITPlace, Saudi Arabia."
+        canonical={absoluteUrl("/products")}
+      />
       <div className="container-app">
         <SectionHeading
+          as="h1"
           eyebrow="Product Catalog"
           title="Networking & IT Equipment"
           description="Browse enterprise networking gear, servers, surveillance, cabling, and more — sourced and supported by ITPlace."

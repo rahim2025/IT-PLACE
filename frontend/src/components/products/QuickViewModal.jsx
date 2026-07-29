@@ -139,7 +139,7 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
                         i === activeImage ? "border-accent" : "border-transparent opacity-70 hover:opacity-100"
                       }`}
                     >
-                      <img src={img} alt="" className="h-full w-full object-cover" />
+                      <img src={img} alt={`${product.name} thumbnail ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
                     </button>
                   ))}
                 </div>

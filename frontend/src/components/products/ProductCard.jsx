@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Heart, Eye } from "lucide-react";
 import StarRating from "./StarRating";
 import ProductBadge from "./ProductBadge";
@@ -15,14 +16,16 @@ export default function ProductCard({ product, isWishlisted, onToggleWishlist, o
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-shadow duration-300 hover:shadow-lg"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-muted">
-        <img
-          src={product.image}
-          alt={product.name}
-          loading="lazy"
-          width={400}
-          height={400}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <Link to={`/products/${product.slug}`} aria-label={`View ${product.name} details`}>
+          <img
+            src={product.image}
+            alt={`${product.name} — ${product.brand} ${product.category}`}
+            loading="lazy"
+            width={400}
+            height={400}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        </Link>
 
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
           {product.isNew && <ProductBadge variant="new">New</ProductBadge>}
@@ -56,7 +59,11 @@ export default function ProductCard({ product, isWishlisted, onToggleWishlist, o
           <span>{product.brand}</span>
         </div>
 
-        <h3 className="mt-1.5 text-sm font-bold leading-snug text-primary">{product.name}</h3>
+        <h3 className="mt-1.5 text-sm font-bold leading-snug text-primary">
+          <Link to={`/products/${product.slug}`} className="hover:text-accent">
+            {product.name}
+          </Link>
+        </h3>
 
         <div className="mt-2">
           <StarRating rating={product.rating} reviewCount={product.reviewCount} />

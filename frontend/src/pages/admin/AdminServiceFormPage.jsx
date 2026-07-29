@@ -4,6 +4,8 @@ import { UploadCloud, X, Loader2, AlertCircle } from "lucide-react";
 import { api, ApiError } from "../../utils/api";
 import { useToast } from "../../context/ToastContext";
 import { SERVICE_ICON_NAMES, getServiceIcon } from "../../data/serviceIcons";
+import SeoFieldsSection from "../../components/admin/SeoFieldsSection";
+import { EMPTY_SEO_FIELDS, seoFieldsFromEntity, seoFieldsToPayload } from "../../utils/seoFormFields";
 
 const EMPTY_FORM = {
   title: "",
@@ -12,6 +14,7 @@ const EMPTY_FORM = {
   productCategoryId: "",
   order: "0",
   status: "active",
+  ...EMPTY_SEO_FIELDS,
 };
 
 export default function AdminServiceFormPage() {
@@ -50,6 +53,7 @@ export default function AdminServiceFormPage() {
           productCategoryId: service.productCategoryId || "",
           order: String(service.order ?? 0),
           status: service.status,
+          ...seoFieldsFromEntity(service),
         });
         setExistingImage(service.image || "");
         setLoading(false);
@@ -124,6 +128,7 @@ export default function AdminServiceFormPage() {
     body.append("order", form.order);
     body.append("status", form.status);
     if (newFile) body.append("image", newFile.file);
+    Object.entries(seoFieldsToPayload(form)).forEach(([key, value]) => body.append(key, value));
 
     setSaving(true);
     try {
@@ -317,6 +322,8 @@ export default function AdminServiceFormPage() {
               ))}
             </div>
           </div>
+
+          <SeoFieldsSection values={form} onChange={handleChange} />
 
           {formError && (
             <p role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">

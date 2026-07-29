@@ -15,6 +15,7 @@ function serializeProduct(doc) {
   return {
     id: String(p._id),
     sku: p.sku,
+    slug: p.slug,
     name: p.name,
     category: p.category,
     categoryId: p.categoryId,
@@ -39,6 +40,15 @@ function serializeProduct(doc) {
     status: p.status,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
+    seo: {
+      title: p.seoTitle || "",
+      description: p.seoDescription || "",
+      keywords: p.seoKeywords || [],
+      canonicalUrl: p.canonicalUrl || "",
+      ogImage: p.ogImage ? resolveMediaUrl(p.ogImage) : "",
+      socialTitle: p.socialTitle || "",
+      socialDescription: p.socialDescription || "",
+    },
   };
 }
 

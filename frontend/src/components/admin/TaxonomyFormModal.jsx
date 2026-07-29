@@ -1,35 +1,54 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
+import SeoFieldsSection from "./SeoFieldsSection";
+import { EMPTY_SEO_FIELDS, seoFieldsFromEntity, seoFieldsToPayload } from "../../utils/seoFormFields";
 
-export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit, onClose }) {
+const EMPTY_FORM = { name: "", status: "active", description: "", image: "", ...EMPTY_SEO_FIELDS };
+
+export default function TaxonomyFormModal({ open, mode, label, imageField = "image", initial, onSubmit, onClose }) {
   const readOnly = mode === "view";
-  const [name, setName] = useState("");
-  const [status, setStatus] = useState("active");
+  const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setName(initial?.name || "");
-    setStatus(initial?.status || "active");
+    setForm({
+      name: initial?.name || "",
+      status: initial?.status || "active",
+      description: initial?.description || "",
+      image: initial?.[imageField] || "",
+      ...seoFieldsFromEntity(initial),
+    });
     setError("");
     setSaving(false);
-  }, [open, initial]);
+  }, [open, initial, imageField]);
 
   if (!open) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (readOnly) return onClose();
-    if (!name.trim()) {
+    if (!form.name.trim()) {
       setError(`${label} name is required.`);
       return;
     }
     setSaving(true);
     setError("");
     try {
-      await onSubmit({ name: name.trim(), status });
+      await onSubmit({
+        name: form.name.trim(),
+        status: form.status,
+        description: form.description.trim(),
+        [imageField]: form.image.trim(),
+        ...seoFieldsToPayload(form),
+      });
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
       setSaving(false);
@@ -56,7 +75,7 @@ export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit
           exit={{ opacity: 0, scale: 0.95, y: 8 }}
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-2xl"
+          className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-surface p-6 shadow-2xl"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-primary">{title}</h2>
@@ -77,8 +96,9 @@ export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit
               </label>
               <input
                 id="taxonomy-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                name="name"
+                value={form.name}
+                onChange={handleChange}
                 disabled={readOnly}
                 autoFocus={!readOnly}
                 className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-accent disabled:opacity-70"
@@ -95,6 +115,36 @@ export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit
             )}
 
             <div>
+              <label htmlFor="taxonomy-description" className="block text-sm font-medium text-secondary">
+                Description <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <textarea
+                id="taxonomy-description"
+                name="description"
+                rows={3}
+                value={form.description}
+                onChange={handleChange}
+                disabled={readOnly}
+                className="mt-1.5 w-full resize-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-accent disabled:opacity-70"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="taxonomy-image" className="block text-sm font-medium text-secondary">
+                {imageField === "logo" ? "Logo URL" : "Image URL"} <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <input
+                id="taxonomy-image"
+                name="image"
+                value={form.image}
+                onChange={handleChange}
+                disabled={readOnly}
+                placeholder="/uploads/products/example.webp"
+                className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-accent disabled:opacity-70"
+              />
+            </div>
+
+            <div>
               <p className="block text-sm font-medium text-secondary">Status</p>
               <div className="mt-1.5 flex gap-2">
                 {["active", "inactive"].map((s) => (
@@ -102,9 +152,9 @@ export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit
                     key={s}
                     type="button"
                     disabled={readOnly}
-                    onClick={() => setStatus(s)}
+                    onClick={() => setForm((f) => ({ ...f, status: s }))}
                     className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-semibold capitalize transition-colors disabled:cursor-not-allowed ${
-                      status === s
+                      form.status === s
                         ? "border-accent bg-accent/10 text-accent"
                         : "border-border bg-background text-secondary hover:enabled:bg-muted"
                     }`}
@@ -114,6 +164,8 @@ export default function TaxonomyFormModal({ open, mode, label, initial, onSubmit
                 ))}
               </div>
             </div>
+
+            <SeoFieldsSection values={form} onChange={handleChange} disabled={readOnly} />
 
             {error && (
               <p role="alert" className="text-sm font-medium text-destructive">

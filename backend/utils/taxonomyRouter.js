@@ -1,27 +1,20 @@
 const express = require("express");
 const Product = require("../models/Product");
 const { protect, restrictTo } = require("../middleware/auth");
-const { slugify } = require("./slugify");
+const { generateUniqueSlug } = require("./slugify");
+const { parseSeoFields } = require("./seoFields");
+const { resolveMediaUrl } = require("./mediaUrl");
+const { serializeProduct } = require("./serializeProduct");
 
 // Shared CRUD router builder for simple named/slugged taxonomies
 // (Category, Brand). `countMatch(doc)` returns the Product filter used to
 // count/guard products still referencing a given entity — categories are
 // referenced by slug (Product.categoryId), brands by name (Product.brand).
-function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch }) {
+// `imageField` is the model's own image-ish field name (Category: "image",
+// Brand: "logo") since the two entities don't share a common field name.
+function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch, imageField = "image" }) {
   const router = express.Router();
-
-  async function uniqueSlug(name, excludeId) {
-    const base = slugify(name) || "item";
-    let candidate = base;
-    let suffix = 2;
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const existing = await Model.findOne({ slug: candidate, ...(excludeId ? { _id: { $ne: excludeId } } : {}) });
-      if (!existing) return candidate;
-      candidate = `${base}-${suffix}`;
-      suffix += 1;
-    }
-  }
+  const uniqueSlug = (name, excludeId) => generateUniqueSlug(Model, name, excludeId);
 
   function serialize(doc, productCounts) {
     return {
@@ -29,9 +22,20 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch })
       name: doc.name,
       slug: doc.slug,
       status: doc.status,
+      description: doc.description || "",
+      [imageField]: doc[imageField] ? resolveMediaUrl(doc[imageField]) : "",
       productCount: productCounts?.get(doc.slug) ?? productCounts?.get(doc.name) ?? 0,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
+      seo: {
+        title: doc.seoTitle || "",
+        description: doc.seoDescription || "",
+        keywords: doc.seoKeywords || [],
+        canonicalUrl: doc.canonicalUrl || "",
+        ogImage: doc.ogImage ? resolveMediaUrl(doc.ogImage) : "",
+        socialTitle: doc.socialTitle || "",
+        socialDescription: doc.socialDescription || "",
+      },
     };
   }
 
@@ -46,6 +50,25 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch })
     } catch (err) {
       console.error(`Failed to list ${label}s:`, err.message);
       res.status(500).json({ error: `Could not load ${label}s.` });
+    }
+  });
+
+  // GET /slug/:slug — public, includes a page of matching products for the
+  // landing page (category/brand detail pages)
+  router.get("/slug/:slug", async (req, res) => {
+    try {
+      const doc = await Model.findOne({ slug: req.params.slug });
+      if (!doc) return res.status(404).json({ error: `${label} not found.` });
+
+      const count = await Product.countDocuments(countMatch(doc));
+      const products = await Product.find(countMatch(doc)).sort({ createdAt: -1 }).limit(24);
+
+      res.json({
+        [label]: serialize(doc, new Map([[doc.slug, count], [doc.name, count]])),
+        products: products.map(serializeProduct),
+      });
+    } catch {
+      res.status(404).json({ error: `${label} not found.` });
     }
   });
 
@@ -83,7 +106,14 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch })
       }
 
       const slug = await uniqueSlug(trimmedName);
-      const doc = await Model.create({ name: trimmedName, slug, status: status || "active" });
+      const doc = await Model.create({
+        name: trimmedName,
+        slug,
+        status: status || "active",
+        description: req.body.description?.trim() || "",
+        [imageField]: req.body[imageField]?.trim() || "",
+        ...parseSeoFields(req.body),
+      });
       res.status(201).json({ [label]: serialize(doc, new Map()) });
     } catch (err) {
       console.error(`Failed to create ${label}:`, err.message);
@@ -120,11 +150,14 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch })
 
       const previousSlug = doc.slug;
       const previousName = doc.name;
-      if (trimmedName !== doc.name) {
+      if (!doc.slug || trimmedName !== doc.name) {
         doc.slug = await uniqueSlug(trimmedName, doc._id);
       }
       doc.name = trimmedName;
       if (status) doc.status = status;
+      doc.description = req.body.description?.trim() ?? doc.description;
+      if (req.body[imageField] !== undefined) doc[imageField] = req.body[imageField]?.trim() || "";
+      Object.assign(doc, parseSeoFields(req.body));
       await doc.save();
 
       // Keep denormalized product fields in sync so existing listings/filters

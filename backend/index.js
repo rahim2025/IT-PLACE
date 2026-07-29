@@ -12,6 +12,7 @@ const categoriesRouter = require("./routes/categories");
 const brandsRouter = require("./routes/brands");
 const servicesRouter = require("./routes/services");
 const clientsRouter = require("./routes/clients");
+const settingsRouter = require("./routes/settings");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +28,12 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", db: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
 });
 
+// This host is the API only — it should never be indexed itself (the
+// storefront's own robots.txt/sitemap.xml on itplace.shop cover crawling).
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain").send("User-agent: *\nDisallow: /\n");
+});
+
 app.use("/api/contact", contactRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/products", productsRouter);
@@ -35,6 +42,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/brands", brandsRouter);
 app.use("/api/services", servicesRouter);
 app.use("/api/clients", clientsRouter);
+app.use("/api/settings", settingsRouter);
 
 mongoose
   .connect(MONGO_URI)

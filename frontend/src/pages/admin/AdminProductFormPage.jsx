@@ -4,6 +4,8 @@ import { UploadCloud, X, Loader2, AlertCircle } from "lucide-react";
 import { api, ApiError } from "../../utils/api";
 import { useToast } from "../../context/ToastContext";
 import CreatableSelect from "../../components/admin/CreatableSelect";
+import SeoFieldsSection from "../../components/admin/SeoFieldsSection";
+import { EMPTY_SEO_FIELDS, seoFieldsFromEntity, seoFieldsToPayload } from "../../utils/seoFormFields";
 
 const EMPTY_FORM = {
   name: "",
@@ -19,6 +21,7 @@ const EMPTY_FORM = {
   featured: false,
   bestSeller: false,
   newArrival: false,
+  ...EMPTY_SEO_FIELDS,
 };
 
 export default function AdminProductFormPage() {
@@ -56,6 +59,7 @@ export default function AdminProductFormPage() {
           featured: product.isFeatured,
           bestSeller: product.isBestSeller,
           newArrival: product.isNew,
+          ...seoFieldsFromEntity(product),
         });
         setExistingImages(product.images || []);
         setLoading(false);
@@ -150,6 +154,7 @@ export default function AdminProductFormPage() {
     body.append("newArrival", form.newArrival);
     body.append("existingImages", JSON.stringify(existingImages));
     newFiles.forEach((f) => body.append("images", f.file));
+    Object.entries(seoFieldsToPayload(form)).forEach(([key, value]) => body.append(key, value));
 
     setSaving(true);
     try {
@@ -440,6 +445,8 @@ export default function AdminProductFormPage() {
               ))}
             </div>
           </div>
+
+          <SeoFieldsSection values={form} onChange={handleChange} />
 
           {formError && (
             <p role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">

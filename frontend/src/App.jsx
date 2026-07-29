@@ -8,6 +8,11 @@ import BackToTopButton from "./components/BackToTopButton";
 import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CategoryPage from "./pages/CategoryPage";
+import BrandPage from "./pages/BrandPage";
+import ServiceDetailPage from "./pages/ServiceDetailPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -31,6 +36,7 @@ const AdminServiceFormPage = lazy(() => import("./pages/admin/AdminServiceFormPa
 const AdminClientsPage = lazy(() => import("./pages/admin/AdminClientsPage"));
 const AdminClientFormPage = lazy(() => import("./pages/admin/AdminClientFormPage"));
 const AdminPlaceholderPage = lazy(() => import("./pages/admin/AdminPlaceholderPage"));
+const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
 function ScrollToTopOnNavigate() {
   const { pathname, hash } = useLocation();
@@ -69,6 +75,10 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:slug" element={<ProductDetailPage />} />
+          <Route path="/categories/:slug" element={<CategoryPage />} />
+          <Route path="/brands/:slug" element={<BrandPage />} />
+          <Route path="/services/:slug" element={<ServiceDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -112,9 +122,11 @@ function App() {
               <Route path="clients/:id/edit" element={<AdminClientFormPage />} />
               <Route path="orders" element={<AdminPlaceholderPage title="Orders" />} />
               <Route path="users" element={<AdminUsersPage />} />
-              <Route path="settings" element={<AdminPlaceholderPage title="Settings" />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
           </Route>
+
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}

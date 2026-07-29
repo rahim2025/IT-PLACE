@@ -3,8 +3,10 @@ const fs = require("fs");
 const path = require("path");
 const Service = require("../models/Service");
 const { protect, restrictTo } = require("../middleware/auth");
-const { uploadService } = require("../middleware/upload");
+const { uploadService, convertToWebp } = require("../middleware/upload");
 const { serializeService } = require("../utils/serializeService");
+const { parseSeoFields } = require("../utils/seoFields");
+const { generateUniqueSlug } = require("../utils/slugify");
 
 const router = express.Router();
 
@@ -35,6 +37,7 @@ function buildServicePayload(body, uploadedImageUrl, existingImage) {
       productCategoryId: body.productCategoryId?.trim() || null,
       order,
       status: body.status === "inactive" ? "inactive" : "active",
+      ...parseSeoFields(body),
     },
   };
 }
@@ -50,6 +53,22 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/services/slug/:slug — public, includes a few related services
+router.get("/slug/:slug", async (req, res) => {
+  try {
+    const service = await Service.findOne({ slug: req.params.slug, status: "active" });
+    if (!service) return res.status(404).json({ error: "Service not found." });
+
+    const related = await Service.find({ status: "active", _id: { $ne: service._id } })
+      .sort({ order: 1 })
+      .limit(3);
+
+    res.json({ service: serializeService(service), related: related.map(serializeService) });
+  } catch {
+    res.status(404).json({ error: "Service not found." });
+  }
+});
+
 // GET /api/services/:id — public
 router.get("/:id", async (req, res) => {
   try {
@@ -62,7 +81,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/services — admin only
-router.post("/", protect, restrictTo("admin"), uploadService.single("image"), async (req, res) => {
+router.post("/", protect, restrictTo("admin"), uploadService.single("image"), convertToWebp, async (req, res) => {
   const uploadedUrl = req.file ? `/uploads/services/${req.file.filename}` : null;
   const { errors, payload } = buildServicePayload(req.body, uploadedUrl, null);
 
@@ -72,6 +91,7 @@ router.post("/", protect, restrictTo("admin"), uploadService.single("image"), as
   }
 
   try {
+    payload.slug = await generateUniqueSlug(Service, payload.title);
     const service = await Service.create(payload);
     res.status(201).json({ service: serializeService(service) });
   } catch (err) {
@@ -81,7 +101,7 @@ router.post("/", protect, restrictTo("admin"), uploadService.single("image"), as
 });
 
 // PUT /api/services/:id — admin only
-router.put("/:id", protect, restrictTo("admin"), uploadService.single("image"), async (req, res) => {
+router.put("/:id", protect, restrictTo("admin"), uploadService.single("image"), convertToWebp, async (req, res) => {
   try {
     const existing = await Service.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: "Service not found." });
@@ -96,6 +116,9 @@ router.put("/:id", protect, restrictTo("admin"), uploadService.single("image"), 
 
     if (uploadedUrl && existing.image !== uploadedUrl) {
       removeUploadedFile(existing.image);
+    }
+    if (!existing.slug || payload.title !== existing.title) {
+      payload.slug = await generateUniqueSlug(Service, payload.title, existing._id);
     }
 
     Object.assign(existing, payload);

@@ -7,9 +7,13 @@ import Values from "../components/Values";
 import WhyUs from "../components/WhyUs";
 import Clients from "../components/Clients";
 import Contact from "../components/Contact";
+import SeoHead from "../seo/SeoHead";
+import { buildOrganizationSchema, buildWebsiteSchema } from "../seo/schema";
+import { useSettings } from "../hooks/useSettings";
 
 export default function HomePage() {
   const location = useLocation();
+  const settings = useSettings();
 
   useEffect(() => {
     if (!location.hash) return;
@@ -21,6 +25,7 @@ export default function HomePage() {
 
   return (
     <>
+      <SeoHead jsonLd={[buildOrganizationSchema(settings), buildWebsiteSchema()]} />
       <Hero />
       <Services />
       <About />

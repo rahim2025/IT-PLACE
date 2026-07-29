@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /unauthorized
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /orders
+Disallow: /checkout
+Allow: /
+
+Sitemap: https://itplace.shop/sitemap.xml

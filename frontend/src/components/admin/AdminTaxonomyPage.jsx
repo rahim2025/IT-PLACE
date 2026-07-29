@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import ConfirmDialog from "../ConfirmDialog";
 import TaxonomyFormModal from "./TaxonomyFormModal";
 
-export default function AdminTaxonomyPage({ apiPath, plural, label }) {
+export default function AdminTaxonomyPage({ apiPath, plural, label, imageField = "image" }) {
   const toast = useToast();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState("loading");
@@ -27,15 +27,15 @@ export default function AdminTaxonomyPage({ apiPath, plural, label }) {
 
   useEffect(load, [apiPath, plural]);
 
-  const handleSubmit = async ({ name, status: itemStatus }) => {
+  const handleSubmit = async (payload) => {
     if (modal.mode === "add") {
-      const data = await api.post(apiPath, { name, status: itemStatus });
+      const data = await api.post(apiPath, payload);
       setItems((prev) => [...prev, data[label]].sort((a, b) => a.name.localeCompare(b.name)));
-      toast.success(`${capitalize(label)} "${name}" was created.`);
+      toast.success(`${capitalize(label)} "${payload.name}" was created.`);
     } else {
-      const data = await api.put(`${apiPath}/${modal.item.id}`, { name, status: itemStatus });
+      const data = await api.put(`${apiPath}/${modal.item.id}`, payload);
       setItems((prev) => prev.map((it) => (it.id === data[label].id ? data[label] : it)));
-      toast.success(`${capitalize(label)} "${name}" was updated.`);
+      toast.success(`${capitalize(label)} "${payload.name}" was updated.`);
     }
     setModal(null);
   };
@@ -154,6 +154,7 @@ export default function AdminTaxonomyPage({ apiPath, plural, label }) {
         open={Boolean(modal)}
         mode={modal?.mode}
         label={capitalize(label)}
+        imageField={imageField}
         initial={modal?.item}
         onSubmit={handleSubmit}
         onClose={() => setModal(null)}

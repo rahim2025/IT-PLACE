@@ -5,6 +5,7 @@ function serializeService(doc) {
   return {
     id: String(s._id),
     title: s.title,
+    slug: s.slug,
     summary: s.summary,
     image: resolveMediaUrl(s.image),
     icon: s.icon,
@@ -13,6 +14,15 @@ function serializeService(doc) {
     status: s.status,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
+    seo: {
+      title: s.seoTitle || "",
+      description: s.seoDescription || "",
+      keywords: s.seoKeywords || [],
+      canonicalUrl: s.canonicalUrl || "",
+      ogImage: s.ogImage ? resolveMediaUrl(s.ogImage) : "",
+      socialTitle: s.socialTitle || "",
+      socialDescription: s.socialDescription || "",
+    },
   };
 }
 

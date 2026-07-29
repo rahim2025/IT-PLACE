@@ -18,4 +18,13 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Build-time Node scripts (prebuild sitemap/robots generation) run as
+    // a plain Node process, not in the browser — they need Node globals
+    // (process, etc.) instead.
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])
