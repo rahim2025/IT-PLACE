@@ -1,3 +1,5 @@
+const { resolveMediaUrl } = require("./mediaUrl");
+
 // Adapts the backend Product document (spec'd field names: images[], discountPrice,
 // featured, bestSeller, newArrival, status) to the shape the existing storefront
 // components already expect (image, compareAtPrice, isFeatured, isBestSeller, isNew,
@@ -25,8 +27,8 @@ function serializeProduct(doc) {
     reviewCount: p.reviewCount || 0,
     stock: p.stock,
     inStock: p.stock > 0,
-    image: p.images?.[0] || null,
-    images: p.images || [],
+    image: p.images?.[0] ? resolveMediaUrl(p.images[0]) : null,
+    images: (p.images || []).map(resolveMediaUrl),
     description: p.description || "",
     tags: p.tags || [],
     colors: p.colors || [],

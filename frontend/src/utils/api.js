@@ -1,3 +1,8 @@
+// In dev this stays empty so requests go through the Vite proxy (relative
+// /api path). In production it's set to the deployed backend's origin,
+// since the frontend and backend are hosted on different subdomains there.
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 class ApiError extends Error {
@@ -20,7 +25,7 @@ async function parseResponse(res) {
 }
 
 async function request(path, { method = "GET", body, isFormData = false } = {}) {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE}/api${path}`, {
     method,
     credentials: "include",
     headers: isFormData ? undefined : JSON_HEADERS,

@@ -1,0 +1,73 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  SSH_HOST: 82.25.125.75
+  SSH_PORT: 65002
+  SSH_USER: u983303466
+  REMOTE_FRONTEND_DIR: /home/u983303466/domains/itplace.shop/public_html/
+  REMOTE_BACKEND_DIR: /home/u983303466/domains/itplace.shop/nodejs/api/
+  REMOTE_NPM: /opt/alt/alt-nodejs20/root/bin/npm
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy dist/ via rsync
+        run: |
+          rsync -avz --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT" \
+            frontend/dist/ "$SSH_USER@$SSH_HOST:$REMOTE_FRONTEND_DIR"
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync source via rsync
+        # Never deletes on the server, and explicitly skips runtime-only
+        # paths (.env, uploads/, node_modules) so redeploys can't wipe
+        # secrets or admin-uploaded images.
+        run: |
+          rsync -avz \
+            --exclude 'node_modules' \
+            --exclude 'uploads' \
+            --exclude '.env*' \
+            --exclude 'scripts' \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT" \
+            backend/ "$SSH_USER@$SSH_HOST:$REMOTE_BACKEND_DIR"
+
+      - name: Install dependencies and restart app
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $REMOTE_BACKEND_DIR && $REMOTE_NPM install --omit=dev && mkdir -p tmp && touch tmp/restart.txt"
