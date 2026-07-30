@@ -8,6 +8,8 @@ import SeoFieldsSection from "../../components/admin/SeoFieldsSection";
 import { EMPTY_SEO_FIELDS, seoFieldsFromEntity, seoFieldsToPayload } from "../../utils/seoFormFields";
 import { compressImage } from "../../utils/compressImage";
 
+const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024; // headroom under the backend's 5MB per-image limit
+
 const EMPTY_FORM = {
   name: "",
   category: null,
@@ -97,7 +99,20 @@ export default function AdminProductFormPage() {
     setCompressing(true);
     try {
       const compressed = await Promise.all(accepted.map((file) => compressImage(file)));
-      setNewFiles((prev) => [...prev, ...compressed.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
+      const okFiles = compressed.filter((file) => file.size <= MAX_UPLOAD_BYTES);
+      const oversized = compressed.filter((file) => file.size > MAX_UPLOAD_BYTES);
+
+      if (oversized.length > 0) {
+        const list = oversized.map((f) => `${f.name} (${(f.size / (1024 * 1024)).toFixed(1)}MB)`).join(", ");
+        setFormError(
+          `${oversized.length > 1 ? "These images are" : "This image is"} still too large after compression — skipped: ${list}. Maximum size is 5MB per image.`
+        );
+      } else {
+        setFormError("");
+      }
+      if (okFiles.length > 0) {
+        setNewFiles((prev) => [...prev, ...okFiles.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
+      }
     } finally {
       setCompressing(false);
     }
