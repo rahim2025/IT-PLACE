@@ -44,8 +44,8 @@ jobs:
             exit 1
           fi
 
-          for attempt in 1 2 3 4 5; do
-            if ssh-keyscan -p "$SSH_PORT" -T 15 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if ssh-keyscan -p "$SSH_PORT" -T 20 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
               if [ -s ~/.ssh/known_hosts ]; then
                 echo "ssh-keyscan succeeded on attempt $attempt"
                 break
@@ -53,11 +53,11 @@ jobs:
             fi
             echo "ssh-keyscan attempt $attempt failed:"
             cat keyscan_err.log || true
-            if [ "$attempt" = "5" ]; then
-              echo "::error::ssh-keyscan failed after 5 attempts against $SSH_HOST:$SSH_PORT"
+            if [ "$attempt" = "8" ]; then
+              echo "::error::ssh-keyscan failed after 8 attempts against $SSH_HOST:$SSH_PORT"
               exit 1
             fi
-            sleep $((attempt * 5))
+            sleep $((attempt * 8))
           done
 
       - name: Deploy dist/ via rsync
@@ -67,6 +67,7 @@ jobs:
             frontend/dist/ "$SSH_USER@$SSH_HOST:$REMOTE_FRONTEND_DIR"
 
   deploy-backend:
+    needs: deploy-frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,8 +87,8 @@ jobs:
             exit 1
           fi
 
-          for attempt in 1 2 3 4 5; do
-            if ssh-keyscan -p "$SSH_PORT" -T 15 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if ssh-keyscan -p "$SSH_PORT" -T 20 "$SSH_HOST" >> ~/.ssh/known_hosts 2>keyscan_err.log; then
               if [ -s ~/.ssh/known_hosts ]; then
                 echo "ssh-keyscan succeeded on attempt $attempt"
                 break
@@ -95,11 +96,11 @@ jobs:
             fi
             echo "ssh-keyscan attempt $attempt failed:"
             cat keyscan_err.log || true
-            if [ "$attempt" = "5" ]; then
-              echo "::error::ssh-keyscan failed after 5 attempts against $SSH_HOST:$SSH_PORT"
+            if [ "$attempt" = "8" ]; then
+              echo "::error::ssh-keyscan failed after 8 attempts against $SSH_HOST:$SSH_PORT"
               exit 1
             fi
-            sleep $((attempt * 5))
+            sleep $((attempt * 8))
           done
 
       - name: Sync source via rsync
