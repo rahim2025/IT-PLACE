@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import CreatableSelect from "../../components/admin/CreatableSelect";
 import SeoFieldsSection from "../../components/admin/SeoFieldsSection";
 import { EMPTY_SEO_FIELDS, seoFieldsFromEntity, seoFieldsToPayload } from "../../utils/seoFormFields";
+import { compressImage } from "../../utils/compressImage";
 
 const EMPTY_FORM = {
   name: "",
@@ -41,6 +42,7 @@ export default function AdminProductFormPage() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [compressing, setCompressing] = useState(false);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -84,14 +86,21 @@ export default function AdminProductFormPage() {
     if (errors[name]) setErrors((er) => ({ ...er, [name]: undefined }));
   };
 
-  const addFiles = (fileList) => {
+  const addFiles = async (fileList) => {
     const totalCount = existingImages.length + newFiles.length + fileList.length;
     if (totalCount > 8) {
       setFormError("You can upload up to 8 images per product.");
       return;
     }
     const accepted = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
-    setNewFiles((prev) => [...prev, ...accepted.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
+    if (accepted.length === 0) return;
+    setCompressing(true);
+    try {
+      const compressed = await Promise.all(accepted.map((file) => compressImage(file)));
+      setNewFiles((prev) => [...prev, ...compressed.map((file) => ({ file, previewUrl: URL.createObjectURL(file) }))]);
+    } finally {
+      setCompressing(false);
+    }
   };
 
   const handleFileInput = (e) => {
@@ -356,6 +365,7 @@ export default function AdminProductFormPage() {
             <p className="block text-sm font-medium text-secondary">
               Product Images <span className="text-destructive">*</span>
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">Large photos are automatically resized and compressed before upload.</p>
             <div
               onDragOver={(e) => {
                 e.preventDefault();
@@ -367,16 +377,25 @@ export default function AdminProductFormPage() {
                 dragging ? "border-accent bg-accent/5" : "border-border"
               }`}
             >
-              <UploadCloud size={28} className="text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Drag & drop images here, or</p>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary hover:bg-muted cursor-pointer"
-              >
-                Browse Files
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={handleFileInput} />
+              {compressing ? (
+                <>
+                  <Loader2 size={28} className="animate-spin text-accent" />
+                  <p className="text-sm text-muted-foreground">Compressing images…</p>
+                </>
+              ) : (
+                <>
+                  <UploadCloud size={28} className="text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Drag & drop images here, or</p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary hover:bg-muted cursor-pointer"
+                  >
+                    Browse Files
+                  </button>
+                </>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={handleFileInput} disabled={compressing} />
             </div>
             {errors.images && <p role="alert" className="mt-1.5 text-sm text-destructive">{errors.images}</p>}
 
@@ -519,7 +538,7 @@ export default function AdminProductFormPage() {
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || compressing}
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               {saving && <Loader2 size={16} className="animate-spin" />}
