@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, maxlength: 200 },
+    name: { type: String, required: true, trim: true},
     slug: { type: String, required: true, trim: true, unique: true, lowercase: true, maxlength: 220 },
     categoryId: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema(
         message: "A product can have at most 8 images.",
       },
     },
-    description: { type: String, default: "", maxlength: 4000 },
+    description: { type: String, default: "" },
     tags: { type: [String], default: [] },
     colors: { type: [String], default: [] },
     sizes: { type: [String], default: [] },
@@ -36,8 +36,8 @@ const productSchema = new mongoose.Schema(
     seoKeywords: { type: [String], default: [] },
     canonicalUrl: { type: String, default: "", trim: true },
     ogImage: { type: String, default: "", trim: true },
-    socialTitle: { type: String, default: "", trim: true, maxlength: 70 },
-    socialDescription: { type: String, default: "", trim: true, maxlength: 320 },
+    socialTitle: { type: String, default: "", trim: true, },
+    socialDescription: { type: String, default: "", trim: true },
   },
   { timestamps: true }
 );
