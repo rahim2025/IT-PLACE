@@ -13,6 +13,7 @@ import CategoryPage from "./pages/CategoryPage";
 import BrandPage from "./pages/BrandPage";
 import ServiceDetailPage from "./pages/ServiceDetailPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import SiteAnalytics from "./seo/SiteAnalytics";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -63,6 +64,7 @@ function App() {
 
   return (
     <>
+      <SiteAnalytics />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
