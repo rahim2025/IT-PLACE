@@ -125,9 +125,9 @@ router.post("/", protect, restrictTo("admin"), upload.array("images", 8), conver
     const product = await Product.create(payload);
     res.status(201).json({ product: serializeProduct(product) });
   } catch (err) {
-    const fieldErrors = formatMongooseValidationError(err);
-    if (fieldErrors) {
-      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    const validation = formatMongooseValidationError(err);
+    if (validation) {
+      return res.status(400).json(validation);
     }
     console.error("Failed to create product:", err.message);
     res.status(500).json({ error: "Could not create the product. Please try again." });
@@ -159,9 +159,9 @@ router.put("/:id", protect, restrictTo("admin"), upload.array("images", 8), conv
     });
     res.json({ product: serializeProduct(product) });
   } catch (err) {
-    const fieldErrors = formatMongooseValidationError(err);
-    if (fieldErrors) {
-      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    const validation = formatMongooseValidationError(err);
+    if (validation) {
+      return res.status(400).json(validation);
     }
     console.error("Failed to update product:", err.message);
     res.status(500).json({ error: "Could not update the product. Please try again." });

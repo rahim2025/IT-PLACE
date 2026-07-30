@@ -117,9 +117,9 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch, i
       });
       res.status(201).json({ [label]: serialize(doc, new Map()) });
     } catch (err) {
-      const fieldErrors = formatMongooseValidationError(err);
-      if (fieldErrors) {
-        return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+      const validation = formatMongooseValidationError(err);
+      if (validation) {
+        return res.status(400).json(validation);
       }
       console.error(`Failed to create ${label}:`, err.message);
       res.status(500).json({ error: `Could not create the ${label}. Please try again.` });
@@ -177,9 +177,9 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch, i
 
       res.json({ [label]: serialize(doc, new Map()) });
     } catch (err) {
-      const fieldErrors = formatMongooseValidationError(err);
-      if (fieldErrors) {
-        return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+      const validation = formatMongooseValidationError(err);
+      if (validation) {
+        return res.status(400).json(validation);
       }
       console.error(`Failed to update ${label}:`, err.message);
       res.status(500).json({ error: `Could not update the ${label}. Please try again.` });

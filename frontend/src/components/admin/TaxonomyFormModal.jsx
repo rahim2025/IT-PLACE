@@ -10,6 +10,7 @@ export default function TaxonomyFormModal({ open, mode, label, imageField = "ima
   const readOnly = mode === "view";
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function TaxonomyFormModal({ open, mode, label, imageField = "ima
       ...seoFieldsFromEntity(initial),
     });
     setError("");
+    setFieldErrors({});
     setSaving(false);
   }, [open, initial, imageField]);
 
@@ -41,6 +43,7 @@ export default function TaxonomyFormModal({ open, mode, label, imageField = "ima
     }
     setSaving(true);
     setError("");
+    setFieldErrors({});
     try {
       await onSubmit({
         name: form.name.trim(),
@@ -51,6 +54,7 @@ export default function TaxonomyFormModal({ open, mode, label, imageField = "ima
       });
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
+      if (err.fieldErrors) setFieldErrors(err.fieldErrors);
       setSaving(false);
     }
   };
@@ -165,7 +169,7 @@ export default function TaxonomyFormModal({ open, mode, label, imageField = "ima
               </div>
             </div>
 
-            <SeoFieldsSection values={form} onChange={handleChange} disabled={readOnly} />
+            <SeoFieldsSection values={form} onChange={handleChange} disabled={readOnly} errors={fieldErrors} />
 
             {error && (
               <p role="alert" className="text-sm font-medium text-destructive">
