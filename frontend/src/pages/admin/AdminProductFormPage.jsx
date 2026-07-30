@@ -21,6 +21,8 @@ const EMPTY_FORM = {
   featured: false,
   bestSeller: false,
   newArrival: false,
+  rating: "0",
+  reviewCount: "0",
   ...EMPTY_SEO_FIELDS,
 };
 
@@ -59,6 +61,8 @@ export default function AdminProductFormPage() {
           featured: product.isFeatured,
           bestSeller: product.isBestSeller,
           newArrival: product.isNew,
+          rating: String(product.rating ?? 0),
+          reviewCount: String(product.reviewCount ?? 0),
           ...seoFieldsFromEntity(product),
         });
         setExistingImages(product.images || []);
@@ -124,6 +128,10 @@ export default function AdminProductFormPage() {
     }
     const stock = Number(form.stock);
     if (form.stock === "" || !Number.isFinite(stock) || stock < 0) next.stock = "Enter a valid stock quantity.";
+    const rating = Number(form.rating);
+    if (form.rating === "" || !Number.isFinite(rating) || rating < 0 || rating > 5) next.rating = "Rating must be between 0 and 5.";
+    const reviewCount = Number(form.reviewCount);
+    if (form.reviewCount === "" || !Number.isFinite(reviewCount) || reviewCount < 0) next.reviewCount = "Enter a valid review count.";
     if (existingImages.length + newFiles.length === 0) next.images = "Add at least one product image.";
     return next;
   };
@@ -152,6 +160,8 @@ export default function AdminProductFormPage() {
     body.append("featured", form.featured);
     body.append("bestSeller", form.bestSeller);
     body.append("newArrival", form.newArrival);
+    body.append("rating", form.rating);
+    body.append("reviewCount", form.reviewCount);
     body.append("existingImages", JSON.stringify(existingImages));
     newFiles.forEach((f) => body.append("images", f.file));
     Object.entries(seoFieldsToPayload(form)).forEach(([key, value]) => body.append(key, value));
@@ -443,6 +453,50 @@ export default function AdminProductFormPage() {
                   {opt.label}
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+            <h2 className="text-sm font-bold text-primary">Ratings & Reviews</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Set the star rating shown on the product card. Leave at 0 to hide the rating.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="field-rating" className="block text-sm font-medium text-secondary">
+                  Rating (0–5)
+                </label>
+                <input
+                  id="field-rating"
+                  name="rating"
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={form.rating}
+                  onChange={handleChange}
+                  aria-invalid={Boolean(errors.rating)}
+                  className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-accent"
+                />
+                {errors.rating && <p role="alert" className="mt-1.5 text-sm text-destructive">{errors.rating}</p>}
+              </div>
+              <div>
+                <label htmlFor="field-reviewCount" className="block text-sm font-medium text-secondary">
+                  Review Count
+                </label>
+                <input
+                  id="field-reviewCount"
+                  name="reviewCount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.reviewCount}
+                  onChange={handleChange}
+                  aria-invalid={Boolean(errors.reviewCount)}
+                  className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:border-accent"
+                />
+                {errors.reviewCount && <p role="alert" className="mt-1.5 text-sm text-destructive">{errors.reviewCount}</p>}
+              </div>
             </div>
           </div>
 

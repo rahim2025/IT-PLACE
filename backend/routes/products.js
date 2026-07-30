@@ -14,6 +14,8 @@ function buildProductPayload(body, uploadedImageUrls) {
   const price = Number(body.price);
   const discountPrice = body.discountPrice === "" || body.discountPrice == null ? null : Number(body.discountPrice);
   const stock = Number(body.stock);
+  const rating = body.rating === "" || body.rating == null ? 0 : Number(body.rating);
+  const reviewCount = body.reviewCount === "" || body.reviewCount == null ? 0 : Number(body.reviewCount);
 
   const errors = {};
   if (!body.name?.trim()) errors.name = "Product name is required.";
@@ -28,6 +30,8 @@ function buildProductPayload(body, uploadedImageUrls) {
     errors.discountPrice = "Discount price must be lower than the regular price.";
   }
   if (!Number.isFinite(stock) || stock < 0) errors.stock = "Enter a valid stock quantity.";
+  if (!Number.isFinite(rating) || rating < 0 || rating > 5) errors.rating = "Rating must be between 0 and 5.";
+  if (!Number.isFinite(reviewCount) || reviewCount < 0) errors.reviewCount = "Enter a valid review count.";
 
   const images = [...existingImages, ...uploadedImageUrls].slice(0, 8);
   if (images.length === 0) errors.images = "Add at least one product image.";
@@ -52,6 +56,8 @@ function buildProductPayload(body, uploadedImageUrls) {
       bestSeller: parseBool(body.bestSeller),
       newArrival: parseBool(body.newArrival),
       status: body.status === "draft" ? "draft" : "active",
+      rating,
+      reviewCount,
       ...parseSeoFields(body),
     },
   };
