@@ -5,6 +5,7 @@ import StarRating from "./StarRating";
 import ProductBadge from "./ProductBadge";
 import WhatsAppIcon from "../WhatsAppIcon";
 import { formatPrice } from "../../utils/format";
+import { formatStockCount } from "../../utils/formatStock";
 import { business } from "../../data/content";
 
 export default function QuickViewModal({ product, onClose, isWishlisted, onToggleWishlist }) {
@@ -172,7 +173,7 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
               </div>
 
               <p className={`mt-2 text-sm font-semibold ${product.inStock ? "text-success" : "text-destructive"}`}>
-                {product.inStock ? `In Stock — ${product.stock} available` : "Out of Stock"}
+                {product.inStock ? `In Stock — ${formatStockCount(product.stock)} available` : "Out of Stock"}
               </p>
 
               <p className="mt-4 text-sm leading-relaxed text-secondary">{product.description}</p>

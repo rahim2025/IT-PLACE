@@ -4,6 +4,7 @@ import { Heart, Eye } from "lucide-react";
 import StarRating from "./StarRating";
 import ProductBadge from "./ProductBadge";
 import { formatPrice } from "../../utils/format";
+import { formatStockCount } from "../../utils/formatStock";
 
 export default function ProductCard({ product, isWishlisted, onToggleWishlist, onQuickView }) {
   return (
@@ -87,7 +88,7 @@ export default function ProductCard({ product, isWishlisted, onToggleWishlist, o
             product.inStock ? "text-success" : "text-destructive"
           }`}
         >
-          {product.inStock ? `In Stock (${product.stock})` : "Out of Stock"}
+          {product.inStock ? `In Stock (${formatStockCount(product.stock)})` : "Out of Stock"}
         </p>
 
         <button

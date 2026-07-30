@@ -13,6 +13,7 @@ import SeoHead from "../seo/SeoHead";
 import { buildProductSchema, buildBreadcrumbSchema } from "../seo/schema";
 import { absoluteUrl, SITE_NAME } from "../seo/config";
 import { formatPrice } from "../utils/format";
+import { formatStockCount } from "../utils/formatStock";
 import { business } from "../data/content";
 import { useWishlist } from "../hooks/useWishlist";
 import { api } from "../utils/api";
@@ -255,7 +256,7 @@ export default function ProductDetailPage() {
                   </div>
 
                   <p className={`mt-2 text-sm font-semibold ${product.inStock ? "text-success" : "text-destructive"}`}>
-                    {product.inStock ? `In Stock — ${product.stock} available` : "Out of Stock"}
+                    {product.inStock ? `In Stock — ${formatStockCount(product.stock)} available` : "Out of Stock"}
                   </p>
 
                   {product.description && (
