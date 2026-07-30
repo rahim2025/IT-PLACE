@@ -72,6 +72,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The host's SSH port appears to rate-limit/cool down briefly after the
+      # first connection from a run (deploy-frontend's), which was rejecting
+      # this job's connection attempt outright when it followed immediately.
+      - name: Cool-down before connecting
+        run: sleep 120
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
