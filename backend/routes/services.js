@@ -7,6 +7,7 @@ const { uploadService, convertToWebp } = require("../middleware/upload");
 const { serializeService } = require("../utils/serializeService");
 const { parseSeoFields } = require("../utils/seoFields");
 const { generateUniqueSlug } = require("../utils/slugify");
+const { formatMongooseValidationError } = require("../utils/mongooseErrors");
 
 const router = express.Router();
 
@@ -95,6 +96,10 @@ router.post("/", protect, restrictTo("admin"), uploadService.single("image"), co
     const service = await Service.create(payload);
     res.status(201).json({ service: serializeService(service) });
   } catch (err) {
+    const fieldErrors = formatMongooseValidationError(err);
+    if (fieldErrors) {
+      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    }
     console.error("Failed to create service:", err.message);
     res.status(500).json({ error: "Could not create the service. Please try again." });
   }
@@ -125,6 +130,10 @@ router.put("/:id", protect, restrictTo("admin"), uploadService.single("image"), 
     await existing.save();
     res.json({ service: serializeService(existing) });
   } catch (err) {
+    const fieldErrors = formatMongooseValidationError(err);
+    if (fieldErrors) {
+      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    }
     console.error("Failed to update service:", err.message);
     res.status(500).json({ error: "Could not update the service. Please try again." });
   }

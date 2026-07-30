@@ -3,6 +3,7 @@ const Product = require("../models/Product");
 const { protect, restrictTo } = require("../middleware/auth");
 const { generateUniqueSlug } = require("./slugify");
 const { parseSeoFields } = require("./seoFields");
+const { formatMongooseValidationError } = require("./mongooseErrors");
 const { resolveMediaUrl } = require("./mediaUrl");
 const { serializeProduct } = require("./serializeProduct");
 
@@ -116,6 +117,10 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch, i
       });
       res.status(201).json({ [label]: serialize(doc, new Map()) });
     } catch (err) {
+      const fieldErrors = formatMongooseValidationError(err);
+      if (fieldErrors) {
+        return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+      }
       console.error(`Failed to create ${label}:`, err.message);
       res.status(500).json({ error: `Could not create the ${label}. Please try again.` });
     }
@@ -172,6 +177,10 @@ function buildTaxonomyRouter(Model, { label, plural = `${label}s`, countMatch, i
 
       res.json({ [label]: serialize(doc, new Map()) });
     } catch (err) {
+      const fieldErrors = formatMongooseValidationError(err);
+      if (fieldErrors) {
+        return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+      }
       console.error(`Failed to update ${label}:`, err.message);
       res.status(500).json({ error: `Could not update the ${label}. Please try again.` });
     }

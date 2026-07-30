@@ -6,6 +6,7 @@ const { serializeProduct } = require("../utils/serializeProduct");
 const { parseListField, parseBool } = require("../utils/requestFields");
 const { parseSeoFields } = require("../utils/seoFields");
 const { generateUniqueSlug } = require("../utils/slugify");
+const { formatMongooseValidationError } = require("../utils/mongooseErrors");
 
 const router = express.Router();
 
@@ -124,6 +125,10 @@ router.post("/", protect, restrictTo("admin"), upload.array("images", 8), conver
     const product = await Product.create(payload);
     res.status(201).json({ product: serializeProduct(product) });
   } catch (err) {
+    const fieldErrors = formatMongooseValidationError(err);
+    if (fieldErrors) {
+      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    }
     console.error("Failed to create product:", err.message);
     res.status(500).json({ error: "Could not create the product. Please try again." });
   }
@@ -154,6 +159,10 @@ router.put("/:id", protect, restrictTo("admin"), upload.array("images", 8), conv
     });
     res.json({ product: serializeProduct(product) });
   } catch (err) {
+    const fieldErrors = formatMongooseValidationError(err);
+    if (fieldErrors) {
+      return res.status(400).json({ error: "Please fix the highlighted fields.", fieldErrors });
+    }
     console.error("Failed to update product:", err.message);
     res.status(500).json({ error: "Could not update the product. Please try again." });
   }
