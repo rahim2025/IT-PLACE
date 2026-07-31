@@ -81,16 +81,20 @@ export default function ProductsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [brandOptions, setBrandOptions] = useState([]);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
-    api
-      .get("/products")
-      .then((data) => {
+    Promise.all([
+      api.get("/products"),
+      api.get("/brands").catch(() => ({ brands: [] })),
+    ])
+      .then(([productsData, brandsData]) => {
         if (cancelled) return;
-        setProducts(data.products.filter((p) => p.status === "active"));
+        setProducts(productsData.products.filter((p) => p.status === "active"));
+        setBrandOptions((brandsData.brands || []).map((brand) => brand.name).filter(Boolean));
         setStatus("success");
       })
       .catch(() => {
@@ -109,6 +113,11 @@ export default function ProductsPage() {
     );
   }, [products]);
 
+  const brands = useMemo(
+    () => [...new Set([...brandOptions, ...products.map((p) => p.brand)])].filter(Boolean).sort(),
+    [brandOptions, products]
+  );
+
   const {
     filters,
     toggleArrayFilter,
@@ -123,8 +132,8 @@ export default function ProductsPage() {
   } = useProductFilters(products, priceBounds);
 
   const hookProps = useMemo(
-    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds }),
-    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds]
+    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands }),
+    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands]
   );
 
   return (
