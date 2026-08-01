@@ -13,18 +13,25 @@ import Pagination from "../components/products/Pagination";
 import QuickViewModal from "../components/products/QuickViewModal";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useWishlist } from "../hooks/useWishlist";
-import { CATEGORIES } from "../data/products";
 import { api } from "../utils/api";
 import SeoHead from "../seo/SeoHead";
 import { absoluteUrl } from "../seo/config";
 
 const SKELETON_COUNT = 8;
 
-function ActiveFilterChips({ filters, toggleArrayFilter, setRating, setPriceRange, setSearch, priceBounds }) {
+function ActiveFilterChips({
+  filters,
+  toggleArrayFilter,
+  setRating,
+  setPriceRange,
+  setSearch,
+  priceBounds,
+  categories,
+}) {
   const chips = [];
 
   filters.categories.forEach((id) => {
-    const label = CATEGORIES.find((c) => c.id === id)?.name || id;
+    const label = categories.find((c) => c.id === id)?.name || id;
     chips.push({ key: `cat-${id}`, label, onRemove: () => toggleArrayFilter("categories", id) });
   });
   filters.brands.forEach((brand) =>
@@ -82,6 +89,7 @@ export default function ProductsPage() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [brandOptions, setBrandOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
@@ -90,11 +98,17 @@ export default function ProductsPage() {
     Promise.all([
       api.get("/products"),
       api.get("/brands").catch(() => ({ brands: [] })),
+      api.get("/categories").catch(() => ({ categories: [] })),
     ])
-      .then(([productsData, brandsData]) => {
+      .then(([productsData, brandsData, categoriesData]) => {
         if (cancelled) return;
         setProducts(productsData.products.filter((p) => p.status === "active"));
         setBrandOptions((brandsData.brands || []).map((brand) => brand.name).filter(Boolean));
+        setCategoryOptions(
+          (categoriesData.categories || [])
+            .map((category) => ({ id: category.slug, name: category.name }))
+            .filter((category) => category.id && category.name)
+        );
         setStatus("success");
       })
       .catch(() => {
@@ -118,6 +132,16 @@ export default function ProductsPage() {
     [brandOptions, products]
   );
 
+  const categories = useMemo(() => {
+    const categoryMap = new Map(categoryOptions.map((category) => [category.id, category]));
+    products.forEach((product) => {
+      if (product.categoryId && !categoryMap.has(product.categoryId)) {
+        categoryMap.set(product.categoryId, { id: product.categoryId, name: product.category || product.categoryId });
+      }
+    });
+    return [...categoryMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [categoryOptions, products]);
+
   const {
     filters,
     toggleArrayFilter,
@@ -132,8 +156,8 @@ export default function ProductsPage() {
   } = useProductFilters(products, priceBounds);
 
   const hookProps = useMemo(
-    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands }),
-    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands]
+    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands, categories }),
+    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands, categories]
   );
 
   return (
@@ -182,6 +206,7 @@ export default function ProductsPage() {
             setPriceRange={setPriceRange}
             setSearch={setSearch}
             priceBounds={priceBounds}
+            categories={categories}
           />
         </div>
 

@@ -20,7 +20,20 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/itplace";
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
-app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
+// DNS serves the same site on both the apex and "www" host, with no redirect
+// between them, so both are live origins in production — allow-listing just
+// one (via CLIENT_ORIGIN) silently breaks every API call for visitors who
+// land on the other host (e.g. via a search result that links to "www").
+const ALLOWED_ORIGINS = new Set([CLIENT_ORIGIN, CLIENT_ORIGIN.replace("://", "://www.")]);
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

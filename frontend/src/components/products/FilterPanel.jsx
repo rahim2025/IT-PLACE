@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { CATEGORIES, ALL_COLORS, ALL_SIZES, ALL_TAGS } from "../../data/products";
+import { ALL_COLORS, ALL_SIZES, ALL_TAGS } from "../../data/products";
 import { formatPrice } from "../../utils/format";
 
 const AVAILABILITY_OPTIONS = [
@@ -50,14 +50,22 @@ function CheckboxRow({ checked, onChange, label, count }) {
   );
 }
 
-export default function FilterPanel({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands }) {
+export default function FilterPanel({
+  filters,
+  toggleArrayFilter,
+  setPriceRange,
+  setRating,
+  priceBounds,
+  brands,
+  categories,
+}) {
   const [localMin, setLocalMin] = useState(filters.minPrice);
   const [localMax, setLocalMax] = useState(filters.maxPrice);
 
   return (
     <div>
       <FilterSection title="Category">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <CheckboxRow
             key={cat.id}
             checked={filters.categories.includes(cat.id)}
