@@ -49,7 +49,7 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={onClose}
-          className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:items-center"
           role="dialog"
           aria-modal="true"
           aria-label={`${product.name} details`}
@@ -60,7 +60,7 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-2xl bg-surface shadow-2xl md:grid-cols-2"
+            className="relative my-8 grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-2xl bg-surface shadow-2xl sm:my-0 md:grid-cols-2"
           >
             <button
               type="button"
@@ -147,7 +147,7 @@ export default function QuickViewModal({ product, onClose, isWishlisted, onToggl
               )}
             </div>
 
-            <div className="flex max-h-[80vh] flex-col overflow-y-auto p-6 md:p-8">
+            <div className="flex flex-col p-6 md:max-h-[80vh] md:overflow-y-auto md:p-8">
               <div className="flex flex-wrap items-center gap-1.5">
                 {product.isNew && <ProductBadge variant="new">New</ProductBadge>}
                 {product.compareAtPrice && <ProductBadge variant="sale">Sale</ProductBadge>}
