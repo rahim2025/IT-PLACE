@@ -12,32 +12,45 @@ import { buildCollectionPageSchema, buildBreadcrumbSchema } from "../seo/schema"
 import { absoluteUrl, SITE_NAME } from "../seo/config";
 import { useWishlist } from "../hooks/useWishlist";
 import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
 
 const SKELETON_COUNT = 8;
+const cacheKey = (slug) => `category:${slug}`;
 
 export default function CategoryPage() {
   const { slug } = useParams();
-  const [status, setStatus] = useState("loading");
+  const initialCache = getCached(cacheKey(slug));
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
   const [retryToken, setRetryToken] = useState(0);
-  const [category, setCategory] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [category, setCategory] = useState(initialCache?.category ?? null);
+  const [products, setProducts] = useState(initialCache?.products ?? []);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
+    const key = cacheKey(slug);
+    const existing = getCached(key);
+    if (existing) {
+      setCategory(existing.category);
+      setProducts(existing.products);
+      setStatus("success");
+    } else {
+      setStatus("loading");
+    }
     api
       .get(`/categories/slug/${slug}`)
       .then((data) => {
         if (cancelled) return;
-        setCategory(data.category);
-        setProducts((data.products || []).filter((p) => p.status === "active"));
+        const result = { category: data.category, products: (data.products || []).filter((p) => p.status === "active") };
+        setCached(key, result);
+        setCategory(result.category);
+        setProducts(result.products);
         setStatus("success");
       })
       .catch((err) => {
         if (cancelled) return;
-        setStatus(err?.status === 404 ? "not-found" : "error");
+        if (!existing) setStatus(err?.status === 404 ? "not-found" : "error");
       });
     return () => {
       cancelled = true;

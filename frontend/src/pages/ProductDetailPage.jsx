@@ -17,7 +17,10 @@ import { formatStockCount } from "../utils/formatStock";
 import { business } from "../data/content";
 import { useWishlist } from "../hooks/useWishlist";
 import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
 import { slugify } from "../utils/slugify";
+
+const cacheKey = (slug) => `product:${slug}`;
 
 function ProductDetailSkeleton() {
   return (
@@ -76,29 +79,40 @@ function ProductLoadError({ onRetry }) {
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const [status, setStatus] = useState("loading");
+  const initialCache = getCached(cacheKey(slug));
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
   const [retryToken, setRetryToken] = useState(0);
-  const [product, setProduct] = useState(null);
-  const [related, setRelated] = useState([]);
+  const [product, setProduct] = useState(initialCache?.product ?? null);
+  const [related, setRelated] = useState(initialCache?.related ?? []);
   const [activeImage, setActiveImage] = useState(0);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
     setActiveImage(0);
+    const key = cacheKey(slug);
+    const existing = getCached(key);
+    if (existing) {
+      setProduct(existing.product);
+      setRelated(existing.related);
+      setStatus("success");
+    } else {
+      setStatus("loading");
+    }
     api
       .get(`/products/slug/${slug}`)
       .then((data) => {
         if (cancelled) return;
-        setProduct(data.product);
-        setRelated(data.related || []);
+        const result = { product: data.product, related: data.related || [] };
+        setCached(key, result);
+        setProduct(result.product);
+        setRelated(result.related);
         setStatus("success");
       })
       .catch((err) => {
         if (cancelled) return;
-        setStatus(err?.status === 404 ? "not-found" : "error");
+        if (!existing) setStatus(err?.status === 404 ? "not-found" : "error");
       });
     return () => {
       cancelled = true;

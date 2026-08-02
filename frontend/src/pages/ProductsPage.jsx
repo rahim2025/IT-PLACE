@@ -14,10 +14,12 @@ import QuickViewModal from "../components/products/QuickViewModal";
 import { useProductFilters } from "../hooks/useProductFilters";
 import { useWishlist } from "../hooks/useWishlist";
 import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
 import SeoHead from "../seo/SeoHead";
 import { absoluteUrl } from "../seo/config";
 
 const SKELETON_COUNT = 8;
+const PRODUCTS_CACHE_KEY = "products:all";
 
 function ActiveFilterChips({
   filters,
@@ -83,18 +85,20 @@ function ActiveFilterChips({
 }
 
 export default function ProductsPage() {
-  const [status, setStatus] = useState("loading");
+  const initialCache = getCached(PRODUCTS_CACHE_KEY);
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
   const [retryToken, setRetryToken] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [brandOptions, setBrandOptions] = useState([]);
-  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [products, setProducts] = useState(initialCache?.products ?? []);
+  const [brandOptions, setBrandOptions] = useState(initialCache?.brandOptions ?? []);
+  const [categoryOptions, setCategoryOptions] = useState(initialCache?.categoryOptions ?? []);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
+    const existing = getCached(PRODUCTS_CACHE_KEY);
+    if (!existing) setStatus("loading");
     Promise.all([
       api.get("/products"),
       api.get("/brands").catch(() => ({ brands: [] })),
@@ -102,17 +106,22 @@ export default function ProductsPage() {
     ])
       .then(([productsData, brandsData, categoriesData]) => {
         if (cancelled) return;
-        setProducts(productsData.products.filter((p) => p.status === "active"));
-        setBrandOptions((brandsData.brands || []).map((brand) => brand.name).filter(Boolean));
-        setCategoryOptions(
-          (categoriesData.categories || [])
+        const result = {
+          products: productsData.products.filter((p) => p.status === "active"),
+          brandOptions: (brandsData.brands || []).map((brand) => brand.name).filter(Boolean),
+          categoryOptions: (categoriesData.categories || [])
             .map((category) => ({ id: category.slug, name: category.name }))
-            .filter((category) => category.id && category.name)
-        );
+            .filter((category) => category.id && category.name),
+        };
+        setCached(PRODUCTS_CACHE_KEY, result);
+        setProducts(result.products);
+        setBrandOptions(result.brandOptions);
+        setCategoryOptions(result.categoryOptions);
         setStatus("success");
       })
       .catch(() => {
-        if (!cancelled) setStatus("error");
+        if (cancelled) return;
+        if (!existing) setStatus("error");
       });
     return () => {
       cancelled = true;

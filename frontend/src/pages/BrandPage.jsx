@@ -12,32 +12,45 @@ import { buildCollectionPageSchema, buildBreadcrumbSchema } from "../seo/schema"
 import { absoluteUrl, SITE_NAME } from "../seo/config";
 import { useWishlist } from "../hooks/useWishlist";
 import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
 
 const SKELETON_COUNT = 8;
+const cacheKey = (slug) => `brand:${slug}`;
 
 export default function BrandPage() {
   const { slug } = useParams();
-  const [status, setStatus] = useState("loading");
+  const initialCache = getCached(cacheKey(slug));
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
   const [retryToken, setRetryToken] = useState(0);
-  const [brand, setBrand] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [brand, setBrand] = useState(initialCache?.brand ?? null);
+  const [products, setProducts] = useState(initialCache?.products ?? []);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
+    const key = cacheKey(slug);
+    const existing = getCached(key);
+    if (existing) {
+      setBrand(existing.brand);
+      setProducts(existing.products);
+      setStatus("success");
+    } else {
+      setStatus("loading");
+    }
     api
       .get(`/brands/slug/${slug}`)
       .then((data) => {
         if (cancelled) return;
-        setBrand(data.brand);
-        setProducts((data.products || []).filter((p) => p.status === "active"));
+        const result = { brand: data.brand, products: (data.products || []).filter((p) => p.status === "active") };
+        setCached(key, result);
+        setBrand(result.brand);
+        setProducts(result.products);
         setStatus("success");
       })
       .catch((err) => {
         if (cancelled) return;
-        setStatus(err?.status === 404 ? "not-found" : "error");
+        if (!existing) setStatus(err?.status === 404 ? "not-found" : "error");
       });
     return () => {
       cancelled = true;

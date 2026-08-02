@@ -11,6 +11,9 @@ import { absoluteUrl, SITE_NAME } from "../seo/config";
 import { getServiceIcon } from "../data/serviceIcons";
 import { business } from "../data/content";
 import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
+
+const cacheKey = (slug) => `service:${slug}`;
 
 function ServiceCard({ service }) {
   const Icon = getServiceIcon(service.icon);
@@ -30,25 +33,36 @@ function ServiceCard({ service }) {
 
 export default function ServiceDetailPage() {
   const { slug } = useParams();
-  const [status, setStatus] = useState("loading");
+  const initialCache = getCached(cacheKey(slug));
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
   const [retryToken, setRetryToken] = useState(0);
-  const [service, setService] = useState(null);
-  const [related, setRelated] = useState([]);
+  const [service, setService] = useState(initialCache?.service ?? null);
+  const [related, setRelated] = useState(initialCache?.related ?? []);
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
+    const key = cacheKey(slug);
+    const existing = getCached(key);
+    if (existing) {
+      setService(existing.service);
+      setRelated(existing.related);
+      setStatus("success");
+    } else {
+      setStatus("loading");
+    }
     api
       .get(`/services/slug/${slug}`)
       .then((data) => {
         if (cancelled) return;
-        setService(data.service);
-        setRelated((data.related || []).filter((s) => s.status === "active"));
+        const result = { service: data.service, related: (data.related || []).filter((s) => s.status === "active") };
+        setCached(key, result);
+        setService(result.service);
+        setRelated(result.related);
         setStatus("success");
       })
       .catch((err) => {
         if (cancelled) return;
-        setStatus(err?.status === 404 ? "not-found" : "error");
+        if (!existing) setStatus(err?.status === 404 ? "not-found" : "error");
       });
     return () => {
       cancelled = true;
