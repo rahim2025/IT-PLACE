@@ -39,15 +39,6 @@ function ActiveFilterChips({
   filters.brands.forEach((brand) =>
     chips.push({ key: `brand-${brand}`, label: brand, onRemove: () => toggleArrayFilter("brands", brand) })
   );
-  filters.colors.forEach((c) =>
-    chips.push({ key: `color-${c}`, label: c, onRemove: () => toggleArrayFilter("colors", c) })
-  );
-  filters.sizes.forEach((s) =>
-    chips.push({ key: `size-${s}`, label: s, onRemove: () => toggleArrayFilter("sizes", s) })
-  );
-  filters.tags.forEach((t) =>
-    chips.push({ key: `tag-${t}`, label: t, onRemove: () => toggleArrayFilter("tags", t) })
-  );
   filters.availability.forEach((a) =>
     chips.push({ key: `avail-${a}`, label: a.replace("-", " "), onRemove: () => toggleArrayFilter("availability", a) })
   );

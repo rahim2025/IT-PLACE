@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { ALL_COLORS, ALL_SIZES, ALL_TAGS } from "../../data/products";
 import { formatPrice } from "../../utils/format";
 
 const AVAILABILITY_OPTIONS = [
@@ -64,17 +63,6 @@ export default function FilterPanel({
 
   return (
     <div>
-      <FilterSection title="Category">
-        {categories.map((cat) => (
-          <CheckboxRow
-            key={cat.id}
-            checked={filters.categories.includes(cat.id)}
-            onChange={() => toggleArrayFilter("categories", cat.id)}
-            label={cat.name}
-          />
-        ))}
-      </FilterSection>
-
       <FilterSection title="Brand">
         <div className="max-h-52 overflow-y-auto pr-1">
           {brands.map((brand) => (
@@ -86,6 +74,17 @@ export default function FilterPanel({
             />
           ))}
         </div>
+      </FilterSection>
+
+      <FilterSection title="Category">
+        {categories.map((cat) => (
+          <CheckboxRow
+            key={cat.id}
+            checked={filters.categories.includes(cat.id)}
+            onChange={() => toggleArrayFilter("categories", cat.id)}
+            label={cat.name}
+          />
+        ))}
       </FilterSection>
 
       <FilterSection title="Price Range">
@@ -148,79 +147,6 @@ export default function FilterPanel({
             label={opt.label}
           />
         ))}
-      </FilterSection>
-
-      {ALL_COLORS.length > 0 && (
-        <FilterSection title="Color" defaultOpen={false}>
-          <div className="flex flex-wrap gap-2">
-            {ALL_COLORS.map((color) => {
-              const active = filters.colors.includes(color);
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => toggleArrayFilter("colors", color)}
-                  aria-pressed={active}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors duration-200 cursor-pointer ${
-                    active
-                      ? "border-accent bg-accent text-white"
-                      : "border-border bg-surface text-secondary hover:bg-muted"
-                  }`}
-                >
-                  {color}
-                </button>
-              );
-            })}
-          </div>
-        </FilterSection>
-      )}
-
-      {ALL_SIZES.length > 0 && (
-        <FilterSection title="Size" defaultOpen={false}>
-          <div className="flex flex-wrap gap-2">
-            {ALL_SIZES.map((size) => {
-              const active = filters.sizes.includes(size);
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => toggleArrayFilter("sizes", size)}
-                  aria-pressed={active}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors duration-200 cursor-pointer ${
-                    active
-                      ? "border-accent bg-accent text-white"
-                      : "border-border bg-surface text-secondary hover:bg-muted"
-                  }`}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </FilterSection>
-      )}
-
-      <FilterSection title="Tags" defaultOpen={false}>
-        <div className="flex flex-wrap gap-2">
-          {ALL_TAGS.map((tag) => {
-            const active = filters.tags.includes(tag);
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleArrayFilter("tags", tag)}
-                aria-pressed={active}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold capitalize transition-colors duration-200 cursor-pointer ${
-                  active
-                    ? "border-accent bg-accent text-white"
-                    : "border-border bg-surface text-secondary hover:bg-muted"
-                }`}
-              >
-                {tag}
-              </button>
-            );
-          })}
-        </div>
       </FilterSection>
     </div>
   );
