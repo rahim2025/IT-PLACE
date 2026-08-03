@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SlidersHorizontal, X } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
@@ -19,7 +19,7 @@ import SeoHead from "../seo/SeoHead";
 import { absoluteUrl } from "../seo/config";
 
 const SKELETON_COUNT = 8;
-const PRODUCTS_CACHE_KEY = "products:all";
+const FILTER_OPTIONS_CACHE_KEY = "products:filter-options";
 
 function ActiveFilterChips({
   filters,
@@ -76,71 +76,35 @@ function ActiveFilterChips({
 }
 
 export default function ProductsPage() {
-  const initialCache = getCached(PRODUCTS_CACHE_KEY);
-  const [status, setStatus] = useState(initialCache ? "success" : "loading");
-  const [retryToken, setRetryToken] = useState(0);
+  const initialOptionsCache = getCached(FILTER_OPTIONS_CACHE_KEY);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [products, setProducts] = useState(initialCache?.products ?? []);
-  const [brandOptions, setBrandOptions] = useState(initialCache?.brandOptions ?? []);
-  const [categoryOptions, setCategoryOptions] = useState(initialCache?.categoryOptions ?? []);
+  const [brands, setBrands] = useState(initialOptionsCache?.brands ?? []);
+  const [categories, setCategories] = useState(initialOptionsCache?.categories ?? []);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let cancelled = false;
-    const existing = getCached(PRODUCTS_CACHE_KEY);
-    if (!existing) setStatus("loading");
     Promise.all([
-      api.get("/products"),
       api.get("/brands").catch(() => ({ brands: [] })),
       api.get("/categories").catch(() => ({ categories: [] })),
-    ])
-      .then(([productsData, brandsData, categoriesData]) => {
-        if (cancelled) return;
-        const result = {
-          products: productsData.products.filter((p) => p.status === "active"),
-          brandOptions: (brandsData.brands || []).map((brand) => brand.name).filter(Boolean),
-          categoryOptions: (categoriesData.categories || [])
-            .map((category) => ({ id: category.slug, name: category.name }))
-            .filter((category) => category.id && category.name),
-        };
-        setCached(PRODUCTS_CACHE_KEY, result);
-        setProducts(result.products);
-        setBrandOptions(result.brandOptions);
-        setCategoryOptions(result.categoryOptions);
-        setStatus("success");
-      })
-      .catch(() => {
-        if (cancelled) return;
-        if (!existing) setStatus("error");
-      });
+    ]).then(([brandsData, categoriesData]) => {
+      if (cancelled) return;
+      const result = {
+        brands: (brandsData.brands || []).map((brand) => brand.name).filter(Boolean).sort(),
+        categories: (categoriesData.categories || [])
+          .map((category) => ({ id: category.slug, name: category.name }))
+          .filter((category) => category.id && category.name)
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      };
+      setCached(FILTER_OPTIONS_CACHE_KEY, result);
+      setBrands(result.brands);
+      setCategories(result.categories);
+    });
     return () => {
       cancelled = true;
     };
-  }, [retryToken]);
-
-  const priceBounds = useMemo(() => {
-    if (products.length === 0) return { min: 0, max: 0 };
-    return products.reduce(
-      (acc, p) => ({ min: Math.min(acc.min, p.price), max: Math.max(acc.max, p.price) }),
-      { min: Infinity, max: 0 }
-    );
-  }, [products]);
-
-  const brands = useMemo(
-    () => [...new Set([...brandOptions, ...products.map((p) => p.brand)])].filter(Boolean).sort(),
-    [brandOptions, products]
-  );
-
-  const categories = useMemo(() => {
-    const categoryMap = new Map(categoryOptions.map((category) => [category.id, category]));
-    products.forEach((product) => {
-      if (product.categoryId && !categoryMap.has(product.categoryId)) {
-        categoryMap.set(product.categoryId, { id: product.categoryId, name: product.category || product.categoryId });
-      }
-    });
-    return [...categoryMap.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [categoryOptions, products]);
+  }, []);
 
   const {
     filters,
@@ -151,14 +115,14 @@ export default function ProductsPage() {
     setSort,
     setPage,
     clearAll,
+    retry,
     isFiltersActive,
+    priceBounds,
     results,
-  } = useProductFilters(products, priceBounds);
+    status,
+  } = useProductFilters();
 
-  const hookProps = useMemo(
-    () => ({ filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands, categories }),
-    [filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands, categories]
-  );
+  const hookProps = { filters, toggleArrayFilter, setPriceRange, setRating, priceBounds, brands, categories };
 
   return (
     <section className="bg-background py-16 md:py-24">
@@ -215,7 +179,7 @@ export default function ProductsPage() {
 
           <div className="min-w-0 flex-1">
             {status === "error" ? (
-              <ProductsErrorState onRetry={() => setRetryToken((t) => t + 1)} />
+              <ProductsErrorState onRetry={retry} />
             ) : status === "loading" ? (
               <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: SKELETON_COUNT }).map((_, i) => (

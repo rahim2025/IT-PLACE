@@ -43,5 +43,10 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index({ name: "text", brand: "text", category: "text", tags: "text" });
+// Supports the catalog/category/brand pages, which always filter by status
+// plus one of these fields — without these, listing a category or brand
+// falls back to a full collection scan as the catalog grows.
+productSchema.index({ status: 1, categoryId: 1 });
+productSchema.index({ status: 1, brand: 1 });
 
 module.exports = mongoose.model("Product", productSchema);

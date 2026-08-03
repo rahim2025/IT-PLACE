@@ -8,16 +8,16 @@ const Product = require("../models/Product");
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/itplace";
 
 const CATEGORIES = [
-  { id: "networking", name: "Networking Equipment", image: "/services/01-network-design.png" },
-  { id: "servers", name: "Servers & Storage", image: "/services/06-enterprise-computing-storage.png" },
-  { id: "cabling", name: "Structured Cabling", image: "/services/20-structured-connectivity.png" },
-  { id: "fiber", name: "Fiber Optic Products", image: "/services/03-fiber-connectivity.png" },
-  { id: "surveillance", name: "Surveillance & Security", image: "/services/09-security-surveillance.png" },
-  { id: "power", name: "Power & Backup", image: "/services/14-power-backup.png" },
-  { id: "racks", name: "Racks & Enclosures", image: "/services/12-enclosures-racks.png" },
-  { id: "wireless", name: "Wireless Solutions", image: "/services/08-wireless-connectivity.png" },
-  { id: "tools", name: "Tools & Testing", image: "/services/16-network-testing-tools.png" },
-  { id: "voip", name: "Business Communication", image: "/services/10-business-communication.png" },
+  { id: "networking", name: "Networking Equipment", image: "/services/01-network-design.webp" },
+  { id: "servers", name: "Servers & Storage", image: "/services/06-enterprise-computing-storage.webp" },
+  { id: "cabling", name: "Structured Cabling", image: "/services/20-structured-connectivity.webp" },
+  { id: "fiber", name: "Fiber Optic Products", image: "/services/03-fiber-connectivity.webp" },
+  { id: "surveillance", name: "Surveillance & Security", image: "/services/09-security-surveillance.webp" },
+  { id: "power", name: "Power & Backup", image: "/services/14-power-backup.webp" },
+  { id: "racks", name: "Racks & Enclosures", image: "/services/12-enclosures-racks.webp" },
+  { id: "wireless", name: "Wireless Solutions", image: "/services/08-wireless-connectivity.webp" },
+  { id: "tools", name: "Tools & Testing", image: "/services/16-network-testing-tools.webp" },
+  { id: "voip", name: "Business Communication", image: "/services/10-business-communication.webp" },
 ];
 
 const CATEGORY_BRANDS = {

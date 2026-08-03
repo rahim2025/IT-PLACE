@@ -7,16 +7,16 @@
 import { Network, Server, Cable, Zap, Camera, BatteryCharging, Boxes, Wifi, Gauge, Phone } from "lucide-react";
 
 export const CATEGORIES = [
-  { id: "networking", name: "Networking Equipment", icon: Network, image: "/services/01-network-design.png" },
-  { id: "servers", name: "Servers & Storage", icon: Server, image: "/services/06-enterprise-computing-storage.png" },
-  { id: "cabling", name: "Structured Cabling", icon: Cable, image: "/services/20-structured-connectivity.png" },
-  { id: "fiber", name: "Fiber Optic Products", icon: Zap, image: "/services/03-fiber-connectivity.png" },
-  { id: "surveillance", name: "Surveillance & Security", icon: Camera, image: "/services/09-security-surveillance.png" },
-  { id: "power", name: "Power & Backup", icon: BatteryCharging, image: "/services/14-power-backup.png" },
-  { id: "racks", name: "Racks & Enclosures", icon: Boxes, image: "/services/12-enclosures-racks.png" },
-  { id: "wireless", name: "Wireless Solutions", icon: Wifi, image: "/services/08-wireless-connectivity.png" },
-  { id: "tools", name: "Tools & Testing", icon: Gauge, image: "/services/16-network-testing-tools.png" },
-  { id: "voip", name: "Business Communication", icon: Phone, image: "/services/10-business-communication.png" },
+  { id: "networking", name: "Networking Equipment", icon: Network, image: "/services/01-network-design.webp" },
+  { id: "servers", name: "Servers & Storage", icon: Server, image: "/services/06-enterprise-computing-storage.webp" },
+  { id: "cabling", name: "Structured Cabling", icon: Cable, image: "/services/20-structured-connectivity.webp" },
+  { id: "fiber", name: "Fiber Optic Products", icon: Zap, image: "/services/03-fiber-connectivity.webp" },
+  { id: "surveillance", name: "Surveillance & Security", icon: Camera, image: "/services/09-security-surveillance.webp" },
+  { id: "power", name: "Power & Backup", icon: BatteryCharging, image: "/services/14-power-backup.webp" },
+  { id: "racks", name: "Racks & Enclosures", icon: Boxes, image: "/services/12-enclosures-racks.webp" },
+  { id: "wireless", name: "Wireless Solutions", icon: Wifi, image: "/services/08-wireless-connectivity.webp" },
+  { id: "tools", name: "Tools & Testing", icon: Gauge, image: "/services/16-network-testing-tools.webp" },
+  { id: "voip", name: "Business Communication", icon: Phone, image: "/services/10-business-communication.webp" },
 ];
 
 const CATEGORY_BRANDS = {

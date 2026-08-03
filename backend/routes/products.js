@@ -10,6 +10,84 @@ const { formatMongooseValidationError } = require("../utils/mongooseErrors");
 
 const router = express.Router();
 
+const PAGE_SIZE_DEFAULT = 12;
+const PAGE_SIZE_MAX = 60;
+
+const SORT_STAGES = {
+  "price-asc": { effectivePrice: 1 },
+  "price-desc": { effectivePrice: -1 },
+  "rating-desc": { rating: -1, reviewCount: -1 },
+  az: { name: 1 },
+  za: { name: -1 },
+  newest: { newArrival: -1, rating: -1 },
+  bestselling: { bestSeller: -1, reviewCount: -1 },
+  popular: { reviewCount: -1 },
+  featured: { featured: -1, rating: -1 },
+};
+
+function parseCsv(value) {
+  return typeof value === "string" && value.length ? value.split(",").filter(Boolean) : [];
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Shared by the list and price-bounds routes: matches the active catalog,
+// optionally narrowed by category/brand/search, and computes `effectivePrice`
+// (the sale price when a valid discount is set, otherwise the regular price)
+// plus `hasDiscount` — the same "current price" the storefront cards display,
+// so filtering/sorting by price lines up with what shoppers actually see.
+function buildBasePipeline(query) {
+  const match = { status: "active" };
+
+  const categoryIds = parseCsv(query.category);
+  if (categoryIds.length) match.categoryId = { $in: categoryIds };
+
+  const brands = parseCsv(query.brand);
+  if (brands.length) match.brand = { $in: brands };
+
+  const search = (query.q || "").trim();
+  if (search) {
+    const re = new RegExp(escapeRegex(search), "i");
+    match.$or = [{ name: re }, { brand: re }, { category: re }, { tags: re }];
+  }
+
+  return [
+    { $match: match },
+    {
+      $addFields: {
+        hasDiscount: {
+          $and: [{ $gt: ["$discountPrice", 0] }, { $lt: ["$discountPrice", "$price"] }],
+        },
+      },
+    },
+    { $addFields: { effectivePrice: { $cond: ["$hasDiscount", "$discountPrice", "$price"] } } },
+  ];
+}
+
+function buildRefinementStage(query) {
+  const conditions = [];
+
+  const priceRange = {};
+  if (query.minPrice !== undefined && query.minPrice !== "") priceRange.$gte = Number(query.minPrice);
+  if (query.maxPrice !== undefined && query.maxPrice !== "") priceRange.$lte = Number(query.maxPrice);
+  if (Object.keys(priceRange).length) conditions.push({ effectivePrice: priceRange });
+
+  const rating = Number(query.rating);
+  if (Number.isFinite(rating) && rating > 0) conditions.push({ rating: { $gte: rating } });
+
+  for (const flag of parseCsv(query.availability)) {
+    if (flag === "in-stock") conditions.push({ stock: { $gt: 0 } });
+    else if (flag === "out-of-stock") conditions.push({ stock: { $lte: 0 } });
+    else if (flag === "discounted") conditions.push({ hasDiscount: true });
+    else if (flag === "new") conditions.push({ newArrival: true });
+    else if (flag === "bestseller") conditions.push({ bestSeller: true });
+  }
+
+  return conditions.length ? [{ $match: { $and: conditions } }] : [];
+}
+
 function buildProductPayload(body, uploadedImageUrls) {
   const existingImages = parseListField(body.existingImages);
   const price = Number(body.price);
@@ -64,14 +142,55 @@ function buildProductPayload(body, uploadedImageUrls) {
   };
 }
 
-// GET /api/products — public
+// GET /api/products — public, filtered + paginated (query: category, brand,
+// q, minPrice, maxPrice, rating, availability, sort, page, pageSize)
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.json({ products: products.map(serializeProduct) });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(PAGE_SIZE_MAX, Math.max(1, Number(req.query.pageSize) || PAGE_SIZE_DEFAULT));
+    const sort = SORT_STAGES[req.query.sort] || SORT_STAGES.featured;
+
+    const pipeline = [...buildBasePipeline(req.query), ...buildRefinementStage(req.query)];
+
+    const [countResult] = await Product.aggregate([...pipeline, { $count: "count" }]);
+    const total = countResult?.count || 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(page, totalPages);
+
+    const items = await Product.aggregate([
+      ...pipeline,
+      { $sort: sort },
+      { $skip: (safePage - 1) * pageSize },
+      { $limit: pageSize },
+    ]);
+
+    res.json({
+      products: items.map(serializeProduct),
+      total,
+      totalPages,
+      page: safePage,
+      pageSize,
+      startIndex: total === 0 ? 0 : (safePage - 1) * pageSize + 1,
+      endIndex: Math.min(safePage * pageSize, total),
+    });
   } catch (err) {
     console.error("Failed to list products:", err.message);
     res.status(500).json({ error: "Could not load products." });
+  }
+});
+
+// GET /api/products/price-bounds — public, min/max current price across the
+// active catalog (or a filtered subset), for the price-range slider
+router.get("/price-bounds", async (req, res) => {
+  try {
+    const [result] = await Product.aggregate([
+      ...buildBasePipeline(req.query),
+      { $group: { _id: null, min: { $min: "$effectivePrice" }, max: { $max: "$effectivePrice" } } },
+    ]);
+    res.json({ min: result?.min ?? 0, max: result?.max ?? 0 });
+  } catch (err) {
+    console.error("Failed to load price bounds:", err.message);
+    res.status(500).json({ error: "Could not load price bounds." });
   }
 });
 

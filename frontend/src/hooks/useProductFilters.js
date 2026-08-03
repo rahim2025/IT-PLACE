@@ -1,15 +1,24 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { api } from "../utils/api";
+import { getCached, setCached } from "../utils/pageCache";
 
 export const PAGE_SIZE = 12;
 
 const LIST_PARAM_KEYS = {
   categories: "category",
   brands: "brand",
-  colors: "color",
-  sizes: "size",
-  tags: "tags",
   availability: "availability",
+};
+
+const EMPTY_RESULTS = {
+  items: [],
+  total: 0,
+  totalPages: 1,
+  page: 1,
+  pageSize: PAGE_SIZE,
+  startIndex: 0,
+  endIndex: 0,
 };
 
 function parseList(param) {
@@ -20,67 +29,32 @@ function toggleInList(list, value) {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
-function matchesAvailability(product, flags) {
-  return flags.every((flag) => {
-    switch (flag) {
-      case "in-stock":
-        return product.inStock;
-      case "out-of-stock":
-        return !product.inStock;
-      case "discounted":
-        return Boolean(product.compareAtPrice);
-      case "new":
-        return product.isNew;
-      case "bestseller":
-        return product.isBestSeller;
-      default:
-        return true;
-    }
-  });
-}
-
-function sortProducts(products, sort) {
-  const list = [...products];
-  switch (sort) {
-    case "price-asc":
-      return list.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return list.sort((a, b) => b.price - a.price);
-    case "rating-desc":
-      return list.sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
-    case "az":
-      return list.sort((a, b) => a.name.localeCompare(b.name));
-    case "za":
-      return list.sort((a, b) => b.name.localeCompare(a.name));
-    case "newest":
-      return list.sort((a, b) => Number(b.isNew) - Number(a.isNew) || b.rating - a.rating);
-    case "bestselling":
-      return list.sort(
-        (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller) || b.reviewCount - a.reviewCount
-      );
-    case "popular":
-      return list.sort((a, b) => b.reviewCount - a.reviewCount);
-    case "featured":
-    default:
-      return list.sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured) || b.rating - a.rating);
-  }
+function buildQueryString(searchParams) {
+  const query = new URLSearchParams(searchParams);
+  if (!query.has("page")) query.set("page", "1");
+  query.set("pageSize", String(PAGE_SIZE));
+  return query.toString();
 }
 
 /**
- * Drives the Products page: filters, sorts, searches, and paginates a
- * product list, keeping every bit of state synced to the URL query string
- * so results are bookmarkable/shareable and survive back/forward navigation.
+ * Drives the Products page: keeps filters/sort/search/page synced to the URL
+ * query string (bookmarkable, survives back/forward), and fetches the
+ * matching page of results from the server — the catalog itself is filtered
+ * and paginated in MongoDB rather than pulled down whole and sliced client-side.
  */
-export function useProductFilters(products, priceBounds) {
+export function useProductFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
+  const initialCache = getCached(`products:${buildQueryString(searchParams)}`);
+  const [results, setResults] = useState(initialCache ?? EMPTY_RESULTS);
+  const [status, setStatus] = useState(initialCache ? "success" : "loading");
+  const [retryToken, setRetryToken] = useState(0);
+  const requestToken = useRef(0);
 
   const filters = useMemo(
     () => ({
       categories: parseList(searchParams.get("category")),
       brands: parseList(searchParams.get("brand")),
-      colors: parseList(searchParams.get("color")),
-      sizes: parseList(searchParams.get("size")),
-      tags: parseList(searchParams.get("tags")),
       availability: parseList(searchParams.get("availability")),
       minPrice: searchParams.has("minPrice") ? Number(searchParams.get("minPrice")) : priceBounds.min,
       maxPrice: searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : priceBounds.max,
@@ -89,8 +63,57 @@ export function useProductFilters(products, priceBounds) {
       sort: searchParams.get("sort") || "featured",
       page: searchParams.has("page") ? Math.max(1, Number(searchParams.get("page"))) : 1,
     }),
-    [searchParams, priceBounds]
+    [searchParams, priceBounds.min, priceBounds.max]
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/products/price-bounds")
+      .then((data) => {
+        if (!cancelled) setPriceBounds({ min: data.min, max: data.max });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const queryString = buildQueryString(searchParams);
+    const cacheKey = `products:${queryString}`;
+    const cached = getCached(cacheKey);
+    const token = ++requestToken.current;
+
+    if (cached) {
+      setResults(cached);
+      setStatus("success");
+    } else {
+      setStatus("loading");
+    }
+
+    api
+      .get(`/products?${queryString}`)
+      .then((data) => {
+        if (requestToken.current !== token) return;
+        const result = {
+          items: data.products,
+          total: data.total,
+          totalPages: data.totalPages,
+          page: data.page,
+          pageSize: data.pageSize,
+          startIndex: data.startIndex,
+          endIndex: data.endIndex,
+        };
+        setCached(cacheKey, result);
+        setResults(result);
+        setStatus("success");
+      })
+      .catch(() => {
+        if (requestToken.current !== token) return;
+        if (!cached) setStatus("error");
+      });
+  }, [searchParams, retryToken]);
 
   const updateParams = useCallback(
     (updater, { resetPage = true, replace = true } = {}) => {
@@ -182,48 +205,11 @@ export function useProductFilters(products, priceBounds) {
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [setSearchParams]);
 
-  const filteredProducts = useMemo(() => {
-    const query = filters.search.trim().toLowerCase();
-
-    return products.filter((product) => {
-      if (filters.categories.length && !filters.categories.includes(product.categoryId)) return false;
-      if (filters.brands.length && !filters.brands.includes(product.brand)) return false;
-      if (filters.colors.length && !product.colors.some((c) => filters.colors.includes(c))) return false;
-      if (filters.sizes.length && !product.sizes.some((s) => filters.sizes.includes(s))) return false;
-      if (filters.tags.length && !product.tags.some((t) => filters.tags.includes(t))) return false;
-      if (product.price < filters.minPrice || product.price > filters.maxPrice) return false;
-      if (filters.rating > 0 && product.rating < filters.rating) return false;
-      if (filters.availability.length && !matchesAvailability(product, filters.availability)) return false;
-
-      if (query) {
-        const haystack = `${product.name} ${product.brand} ${product.category} ${product.tags.join(" ")}`.toLowerCase();
-        if (!haystack.includes(query)) return false;
-      }
-
-      return true;
-    });
-  }, [products, filters]);
-
-  const sortedProducts = useMemo(
-    () => sortProducts(filteredProducts, filters.sort),
-    [filteredProducts, filters.sort]
-  );
-
-  const total = sortedProducts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const page = Math.min(filters.page, totalPages);
-
-  const pageItems = useMemo(
-    () => sortedProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [sortedProducts, page]
-  );
+  const retry = useCallback(() => setRetryToken((t) => t + 1), []);
 
   const isFiltersActive = Boolean(
     filters.categories.length ||
       filters.brands.length ||
-      filters.colors.length ||
-      filters.sizes.length ||
-      filters.tags.length ||
       filters.availability.length ||
       filters.rating > 0 ||
       filters.minPrice > priceBounds.min ||
@@ -240,15 +226,10 @@ export function useProductFilters(products, priceBounds) {
     setSort,
     setPage,
     clearAll,
+    retry,
     isFiltersActive,
-    results: {
-      items: pageItems,
-      total,
-      totalPages,
-      page,
-      pageSize: PAGE_SIZE,
-      startIndex: total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1,
-      endIndex: Math.min(page * PAGE_SIZE, total),
-    },
+    priceBounds,
+    results,
+    status,
   };
 }

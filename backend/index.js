@@ -2,6 +2,7 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const multer = require("multer");
+const compression = require("compression");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
@@ -24,6 +25,8 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 // between them, so both are live origins in production — allow-listing just
 // one (via CLIENT_ORIGIN) silently breaks every API call for visitors who
 // land on the other host (e.g. via a search result that links to "www").
+app.use(compression());
+
 const ALLOWED_ORIGINS = new Set([CLIENT_ORIGIN, CLIENT_ORIGIN.replace("://", "://www.")]);
 app.use(
   cors({
