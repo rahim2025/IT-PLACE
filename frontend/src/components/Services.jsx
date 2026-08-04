@@ -33,7 +33,7 @@ export default function Services() {
   }, []);
 
   return (
-    <section id="services" className="overflow-hidden bg-background py-16 md:py-24">
+    <section id="services" className="relative z-10 overflow-hidden bg-background py-16 md:py-24">
       <div className="container-app">
         <SectionHeading
           eyebrow="Our Services"
