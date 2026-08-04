@@ -32,14 +32,13 @@ function cardTransform(offset) {
   };
 }
 
-function Card({ service, offset, onSelect, reduceMotion }) {
+function Card({ service, offset, onSelect, reduceMotion, expanded, onToggleExpand }) {
   const Icon = getServiceIcon(service.icon);
   const isActive = offset === 0;
   const transform = cardTransform(offset);
   const quoteMessage = encodeURIComponent(
     `Hi ITPlace, I'd like a quote for: ${service.title}`
   );
-  const [expanded, setExpanded] = useState(false);
   const showExpanded = isActive && expanded;
   const canExpand = service.summary.length > SUMMARY_TRUNCATE_LENGTH;
 
@@ -101,7 +100,7 @@ function Card({ service, offset, onSelect, reduceMotion }) {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setExpanded((v) => !v);
+                onToggleExpand();
               }}
               aria-expanded={showExpanded}
               className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-light transition-colors duration-200 cursor-pointer"
@@ -147,12 +146,14 @@ function Card({ service, offset, onSelect, reduceMotion }) {
 
 export default function ServicesCarousel3D({ services }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [expandedActive, setExpandedActive] = useState(false);
   const total = services.length;
   const reduceMotion = useReducedMotion();
   const stageRef = useRef(null);
 
   const goTo = useCallback(
     (index) => {
+      setExpandedActive(false);
       setActiveIndex(Math.min(total - 1, Math.max(0, index)));
     },
     [total]
@@ -181,7 +182,9 @@ export default function ServicesCarousel3D({ services }) {
         tabIndex={0}
         onKeyDown={handleKeyDown}
         aria-label="Services carousel — use arrow keys, drag, or the buttons to browse"
-        className="relative mx-auto h-[500px] max-w-4xl outline-none sm:h-[540px] md:h-[580px]"
+        className={`relative mx-auto max-w-4xl outline-none transition-[height] duration-300 ease-out ${
+          expandedActive ? "h-[640px]" : "h-[500px] sm:h-[540px] md:h-[580px]"
+        }`}
         style={{ perspective: 1600 }}
       >
         <motion.div
@@ -198,6 +201,8 @@ export default function ServicesCarousel3D({ services }) {
               offset={i - activeIndex}
               onSelect={() => goTo(i)}
               reduceMotion={reduceMotion}
+              expanded={expandedActive}
+              onToggleExpand={() => setExpandedActive((v) => !v)}
             />
           ))}
         </motion.div>
