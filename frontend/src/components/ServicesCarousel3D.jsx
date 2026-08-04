@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
 import { business } from "../data/content";
 import { getServiceIcon } from "../data/serviceIcons";
+
+const SUMMARY_TRUNCATE_LENGTH = 100;
 
 function cardTransform(offset) {
   const abs = Math.abs(offset);
@@ -37,6 +39,9 @@ function Card({ service, offset, onSelect, reduceMotion }) {
   const quoteMessage = encodeURIComponent(
     `Hi ITPlace, I'd like a quote for: ${service.title}`
   );
+  const [expanded, setExpanded] = useState(false);
+  const showExpanded = isActive && expanded;
+  const canExpand = service.summary.length > SUMMARY_TRUNCATE_LENGTH;
 
   if (Math.abs(offset) > 3) return null;
 
@@ -84,9 +89,30 @@ function Card({ service, offset, onSelect, reduceMotion }) {
           <h3 className="mt-4 line-clamp-2 text-base font-bold text-primary md:text-lg">
             {service.title}
           </h3>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+          <p
+            className={`mt-2 text-sm leading-relaxed text-muted-foreground ${
+              showExpanded ? "max-h-28 overflow-y-auto pr-1" : "line-clamp-2"
+            }`}
+          >
             {service.summary}
           </p>
+          {isActive && canExpand && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              aria-expanded={showExpanded}
+              className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-light transition-colors duration-200 cursor-pointer"
+            >
+              {showExpanded ? "See less" : "See more"}
+              <ChevronDown
+                size={13}
+                className={`transition-transform duration-200 ${showExpanded ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
           {isActive && (
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
               <a
