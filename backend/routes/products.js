@@ -194,6 +194,20 @@ router.get("/price-bounds", async (req, res) => {
   }
 });
 
+// GET /api/products/admin/all — admin only, the full catalog (active + draft,
+// unpaginated) for the admin product table and dashboard, which do their own
+// client-side search/filter/sort over everything rather than a server page
+// at a time — unlike the storefront, admins need drafts visible too.
+router.get("/admin/all", protect, restrictTo("admin"), async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+    res.json({ products: products.map(serializeProduct) });
+  } catch (err) {
+    console.error("Failed to list all products:", err.message);
+    res.status(500).json({ error: "Could not load products." });
+  }
+});
+
 // GET /api/products/slug/:slug — public, includes related products for
 // detail-page internal linking (same category, excluding itself)
 router.get("/slug/:slug", async (req, res) => {

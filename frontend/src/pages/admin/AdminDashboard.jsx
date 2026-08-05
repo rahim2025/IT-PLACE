@@ -26,7 +26,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.get("/products"), api.get("/users").catch(() => ({ users: [] }))])
+    Promise.all([api.get("/products/admin/all"), api.get("/users").catch(() => ({ users: [] }))])
       .then(([productsData, usersData]) => {
         if (cancelled) return;
         setProducts(productsData.products);

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronLeft, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
@@ -41,6 +41,21 @@ function Card({ service, offset, onSelect, reduceMotion, expanded, onToggleExpan
   );
   const showExpanded = isActive && expanded;
   const canExpand = service.summary.length > SUMMARY_TRUNCATE_LENGTH;
+  const summaryRef = useRef(null);
+  const [hasMoreToScroll, setHasMoreToScroll] = useState(false);
+
+  useEffect(() => {
+    if (!showExpanded) return undefined;
+    const el = summaryRef.current;
+    if (!el) return undefined;
+
+    const updateHint = () => {
+      setHasMoreToScroll(el.scrollHeight - el.scrollTop - el.clientHeight > 4);
+    };
+    updateHint();
+    el.addEventListener("scroll", updateHint, { passive: true });
+    return () => el.removeEventListener("scroll", updateHint);
+  }, [showExpanded, service.summary]);
 
   if (Math.abs(offset) > 3) return null;
 
@@ -88,13 +103,26 @@ function Card({ service, offset, onSelect, reduceMotion, expanded, onToggleExpan
           <h3 className="mt-4 line-clamp-2 text-base font-bold text-primary md:text-lg">
             {service.title}
           </h3>
-          <p
-            className={`mt-2 text-sm leading-relaxed text-muted-foreground ${
-              showExpanded ? "max-h-28 overflow-y-auto pr-1" : "line-clamp-2"
-            }`}
-          >
-            {service.summary}
-          </p>
+          <div className="relative">
+            <p
+              ref={summaryRef}
+              className={`mt-2 text-sm leading-relaxed text-muted-foreground ${
+                showExpanded
+                  ? "max-h-32 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
+                  : "line-clamp-2"
+              }`}
+            >
+              {service.summary}
+            </p>
+            {showExpanded && hasMoreToScroll && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 flex h-6 items-end justify-center bg-gradient-to-t from-surface to-transparent"
+              >
+                <ChevronDown size={14} className="mb-0.5 animate-bounce text-muted-foreground" />
+              </div>
+            )}
+          </div>
           {isActive && canExpand && (
             <button
               type="button"

@@ -16,24 +16,28 @@ export default function WishlistPage() {
 
   useEffect(() => {
     let cancelled = false;
+    if (wishlistIds.length === 0) {
+      setProducts([]);
+      setStatus("success");
+      return undefined;
+    }
     setStatus("loading");
-    api
-      .get("/products")
-      .then((data) => {
-        if (!cancelled) {
-          setProducts(data.products);
-          setStatus("success");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
+    Promise.all(
+      wishlistIds.map((id) =>
+        api
+          .get(`/products/${id}`)
+          .then((data) => data.product)
+          .catch(() => null)
+      )
+    ).then((fetched) => {
+      if (cancelled) return;
+      setProducts(fetched.filter(Boolean));
+      setStatus("success");
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const wishlistedProducts = products.filter((p) => wishlistIds.includes(p.id));
+  }, [wishlistIds]);
 
   return (
     <section className="bg-background py-16 md:py-24">
@@ -47,7 +51,7 @@ export default function WishlistPage() {
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
-          ) : wishlistedProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-6 py-20 text-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <Heart size={28} />
@@ -65,7 +69,7 @@ export default function WishlistPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-              {wishlistedProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}

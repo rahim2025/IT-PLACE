@@ -32,7 +32,7 @@ export default function AdminProductsPage() {
   const loadProducts = () => {
     setStatus("loading");
     api
-      .get("/products")
+      .get("/products/admin/all")
       .then((data) => {
         setProducts(data.products);
         setStatus("success");
